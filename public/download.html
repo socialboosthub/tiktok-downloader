@@ -1,100 +1,70 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Download</title>
+  <title>Batch Download</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
   <style>
-    .container {
-      max-width: 420px;
-      margin: 40px auto;
-      text-align: center;
-      font-family: sans-serif;
+    body { font-family: sans-serif; text-align:center }
+    .card {
+      margin:20px auto;
+      max-width:420px;
+      padding:15px;
+      border-radius:12px;
+      background:#f5f5f5;
     }
-
-    .thumb-box {
-      width: 100%;
-      height: 240px;
-      background: #eee;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
+    img {
+      width:100%;
+      border-radius:10px;
+      display:none;
     }
-
-    .thumb-box img {
-      width: 100%;
-      display: none;
-    }
-
-    .loader {
-      width: 40px;
-      height: 40px;
-      border: 4px solid #ccc;
-      border-top: 4px solid #000;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
     button {
-      margin-top: 20px;
-      padding: 14px 30px;
-      font-size: 16px;
+      margin-top:10px;
+      padding:12px 20px;
     }
   </style>
 </head>
 
 <body>
 
-<div class="container">
-  <h3>Your Video</h3>
-
-  <div class="thumb-box">
-    <div class="loader" id="loader"></div>
-    <img id="thumb" alt="Thumbnail">
-  </div>
-
-  <button id="btn" disabled>Download Video</button>
-</div>
+<h3>Ready to Download</h3>
+<div id="list"></div>
 
 <script>
 const params = new URLSearchParams(location.search);
-const tiktokUrl = params.get("url");
+const raw = params.get("links");
 
-async function load() {
-  const r = await fetch(`/api?url=${encodeURIComponent(tiktokUrl)}`);
+const links = raw.split("\n").map(l => l.trim()).filter(Boolean);
+const list = document.getElementById("list");
+
+async function process(link, i) {
+  const r = await fetch(`/api?url=${encodeURIComponent(link)}`);
   const j = await r.json();
 
-  const imgUrl =
-    j.data.origin_cover ||
-    j.data.dynamic_cover ||
-    j.data.cover;
+  const card = document.createElement("div");
+  card.className = "card";
 
-  const videoUrl = j.data.play;
+  const img = document.createElement("img");
+  img.src = j.data.origin_cover || j.data.cover;
+  img.onload = () => img.style.display = "block";
 
-  const img = document.getElementById("thumb");
-  const loader = document.getElementById("loader");
-  const btn = document.getElementById("btn");
-
-  img.onload = () => {
-    loader.style.display = "none";
-    img.style.display = "block";
-    btn.disabled = false;
-  };
-
-  img.src = imgUrl;
-
+  const btn = document.createElement("button");
+  btn.innerText = "Download Video";
   btn.onclick = () => {
-    location.href = `/download?url=${encodeURIComponent(videoUrl)}`;
+    location.href =
+      `/download?url=${encodeURIComponent(j.data.play)}&name=tiktok_${i+1}`;
   };
+
+  card.appendChild(img);
+  card.appendChild(btn);
+  list.appendChild(card);
 }
 
-load();
+// PROCESS ONE BY ONE (SAFE)
+(async () => {
+  for (let i = 0; i < links.length; i++) {
+    await process(links[i], i);
+  }
+})();
 </script>
 
 </body>
