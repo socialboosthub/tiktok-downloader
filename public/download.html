@@ -96,33 +96,42 @@ const cards = links.map((_, i) => {
   return card;
 });
 
-const params = new URLSearchParams(location.search);
-const rawLinks = params.get("links");
+/* STEP 2: Load videos ONE BY ONE (lazy, ordered) */
+async function loadVideo(index) {
+  if (index >= links.length) return;
 
-const links = rawLinks
-  .split("\n")
-  .map(l => l.trim())
-  .filter(Boolean);
+  const card = cards[index];
+  const img = card.querySelector("img");
+  const thumb = card.querySelector(".thumb");
+  const status = card.querySelector(".status");
 
-const list = document.getElementById("list");
+  try {
+    const res = await fetch(`/api?url=${encodeURIComponent(links[index])}`);
+    const json = await res.json();
 
-/* STEP 1: CREATE ALL CARDS FIRST */
-const cards = links.map((_, i) => {
-  const card = document.createElement("div");
-  card.className = "card";
+    img.src = json.data.origin_cover || json.data.cover;
 
-  card.innerHTML = `
-    <div class="thumb"></div>
-    <img>
-    <div class="status">Loading video ${i + 1} of ${links.length}…</div>
-  `;
+    img.onload = () => {
+      thumb.remove();
+      img.style.display = "block";
+    };
 
-  list.appendChild(card);
-  return card;
-});
+    const btn = document.createElement("button");
+    btn.textContent = "Download Video";
+    btn.onclick = () => {
+      location.href =
+        `/download?url=${encodeURIComponent(json.data.play)}&name=tiktok_${index + 1}`;
+    };
 
-/* STEP 2: LOAD VIDEOS SEQUENTIALLY WITH DELAY + RETRY */
-function loadVideo(index) {
+    status.textContent = "Ready to download";
+    card.appendChild(btn);
+
+  } catch {
+    status.textContent = "Failed to load video";
+  }
+
+  /* Load NEXT video after current finishes */
+  async function loadVideo(index) {
   if (index >= links.length) return;
 
   const card = cards[index];
@@ -138,7 +147,7 @@ function loadVideo(index) {
         `/api?url=${encodeURIComponent(links[index])}`
       );
 
-      if (!res.ok) throw new Error("API blocked");
+      if (!res.ok) throw new Error("API error");
 
       const json = await res.json();
 
@@ -159,6 +168,7 @@ function loadVideo(index) {
       status.textContent = "Ready to download";
       card.appendChild(btn);
 
+      // Delay BEFORE loading next video (IMPORTANT)
       setTimeout(() => loadVideo(index + 1), 1200);
       return;
 
@@ -168,15 +178,19 @@ function loadVideo(index) {
         status.textContent = "Retrying…";
         setTimeout(tryLoad, 1500);
       } else {
-        status.textContent = "Skipped (API limit)";
+        status.textContent = "Failed to load (skip)";
         setTimeout(() => loadVideo(index + 1), 1200);
       }
     }
   }
 
-  tryLoad(); // 🔴 THIS LINE IS CRITICAL
+  tryLoad();
+  }
 }
 
 /* START LOADING */
 loadVideo(0);
 </script>
+
+</body>
+</html>
