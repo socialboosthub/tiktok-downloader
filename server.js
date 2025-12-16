@@ -3,7 +3,8 @@ const fetch = require("node-fetch");
 const path = require("path");
 
 const app = express();
-
+// SERVE STATIC FILES
+app.use(express.static(path.join(__dirname, "public")));
 // Home route (extra safety)
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
@@ -18,7 +19,7 @@ app.get("/api", async (req, res) => {
   res.json(j);
 });
 
-app.get("download.html", async (req, res) => {
+app.get("/download", async (req, res) => {
   const videoUrl = req.query.url;
   const response = await fetch(videoUrl);
 
