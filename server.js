@@ -1,44 +1,38 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Download Video</title>
-</head>
-<body style="text-align:center;font-family:sans-serif">
+const express = require("express");
+const fetch = require("node-fetch");
+const path = require("path");
 
-<h3>Your Video</h3>
+const app = express();
+// SERVE STATIC FILES
+app.use(express.static(path.join(__dirname, "public")));
+// Home route (extra safety)
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
 
-<img id="thumb"
-     style="width:95%;border-radius:10px"
-     alt="Video thumbnail">
+app.get("/api", async (req, res) => {
+  const url = req.query.url;
+  const r = await fetch(
+    `https://tikwm.com/api/?url=${encodeURIComponent(url)}`
+  );
+  const j = await r.json();
+  res.json(j);
+});
 
-<br><br>
+app.get("/download", async (req, res) => {
+  const videoUrl = req.query.url;
+  const response = await fetch(videoUrl);
 
-<button id="btn" style="padding:12px 25px">
-Download Video
-</button>
+  res.setHeader(
+    "Content-Disposition",
+    "attachment; filename=tiktok.mp4"
+  );
+  res.setHeader("Content-Type", "video/mp4");
 
-<script>
-const params = new URLSearchParams(window.location.search);
-const tiktokUrl = params.get("url");
+  response.body.pipe(res);
+});
 
-async function load() {
-  const res = await fetch(`/api?url=${encodeURIComponent(tiktokUrl)}`);
-  const json = await res.json();
-
-  // THUMBNAIL IMAGE
-  document.getElementById("thumb").src = json.data.cover;
-
-  // VIDEO FILE
-  const videoUrl = json.data.play;
-
-  document.getElementById("btn").onclick = () => {
-    window.location.href =
-      `/download?url=${encodeURIComponent(videoUrl)}`;
-  };
-}
-
-load();
-</script>
-
-</body>
-</html>
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () =>
+  console.log("Server running on port " + PORT)
+);
