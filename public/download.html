@@ -96,7 +96,6 @@ const cards = links.map((_, i) => {
   return card;
 });
 
-/* STEP 2: Load videos ONE BY ONE (lazy, ordered) */
 async function loadVideo(index) {
   if (index >= links.length) return;
 
@@ -105,38 +104,50 @@ async function loadVideo(index) {
   const thumb = card.querySelector(".thumb");
   const status = card.querySelector(".status");
 
-  try {
-    const res = await fetch(`/api?url=${encodeURIComponent(links[index])}`);
-    const json = await res.json();
+  let attempts = 0;
 
-    img.src = json.data.origin_cover || json.data.cover;
+  async function tryLoad() {
+    try {
+      const res = await fetch(
+        `/api?url=${encodeURIComponent(links[index])}`
+      );
 
-    img.onload = () => {
-      thumb.remove();
-      img.style.display = "block";
-    };
+      if (!res.ok) throw new Error("API error");
 
-    const btn = document.createElement("button");
-    btn.textContent = "Download Video";
-    btn.onclick = () => {
-      location.href =
-        `/download?url=${encodeURIComponent(json.data.play)}&name=tiktok_${index + 1}`;
-    };
+      const json = await res.json();
 
-    status.textContent = "Ready to download";
-    card.appendChild(btn);
+      img.src = json.data.origin_cover || json.data.cover;
 
-  } catch {
-    status.textContent = "Failed to load video";
+      img.onload = () => {
+        thumb.remove();
+        img.style.display = "block";
+      };
+
+      const btn = document.createElement("button");
+      btn.textContent = "Download Video";
+      btn.onclick = () => {
+        location.href =
+          `/download?url=${encodeURIComponent(json.data.play)}&name=tiktok_${index + 1}`;
+      };
+
+      status.textContent = "Ready to download";
+      card.appendChild(btn);
+
+      // Delay BEFORE loading next video (IMPORTANT)
+      setTimeout(() => loadVideo(index + 1), 1200);
+      return;
+
+    } catch (e) {
+      attempts++;
+      if (attempts < 2) {
+        status.textContent = "Retrying…";
+        setTimeout(tryLoad, 1500);
+      } else {
+        status.textContent = "Failed to load (skip)";
+        setTimeout(() => loadVideo(index + 1), 1200);
+      }
+    }
   }
 
-  /* Load NEXT video after current finishes */
-  loadVideo(index + 1);
+  tryLoad();
 }
-
-/* START LOADING */
-loadVideo(0);
-</script>
-
-</body>
-</html>
