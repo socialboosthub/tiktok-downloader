@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>TikTok Downloader</title>
+  </head>
+  <body style="text-align:center;font-family:sans-serif">
+
+  <h2>TikTok Downloader</h2>
+
+  <input id="link" placeholder="Paste TikTok link"
+   style="width:90%;padding:10px">
+
+   <br><br>
+
+   <button onclick="go()" style="padding:10px 20px">
+   Download
+   </button>
+
+   <script>
+   function go() {
+     const url = document.getElementById("link").value;
+       if(!url) return alert("Paste link");
+         location.href = "download.html?url=" + encodeURIComponent(url);
+         }
+         </script>
+
+         </body>
+         </html>
