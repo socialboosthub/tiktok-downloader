@@ -4,9 +4,6 @@ const path = require("path");
 
 const app = express();
 
-// VERY IMPORTANT LINE
-app.use(express.static(path.join(__dirname, "public")));
-
 // Home route (extra safety)
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
