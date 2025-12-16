@@ -47,16 +47,30 @@
       100% { background-position: -100% 0 }
     }
 
-    img {
+    img.video-thumb {
       width: 100%;
       border-radius: 10px;
       display: none;
       margin-top: 8px;
     }
 
+    .user {
+      display: flex;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 8px;
+      background: #ddd;
+    }
+
     .username {
       font-weight: 600;
-      margin-top: 8px;
       font-size: 14px;
     }
 
@@ -113,8 +127,11 @@ const cards = links.map((_, i) => {
 
   card.innerHTML = `
     <div class="thumb"></div>
-    <img>
-    <div class="username"></div>
+    <img class="video-thumb">
+    <div class="user">
+      <img class="avatar">
+      <div class="username"></div>
+    </div>
     <div class="caption"></div>
     <div class="status">Loading video ${i + 1} of ${links.length}…</div>
   `;
@@ -123,13 +140,14 @@ const cards = links.map((_, i) => {
   return card;
 });
 
-/* STEP 2: LOAD VIDEOS SEQUENTIALLY */
+/* STEP 2: LOAD VIDEOS ONE BY ONE */
 function loadVideo(index) {
   if (index >= links.length) return;
 
   const card = cards[index];
-  const img = card.querySelector("img");
   const thumb = card.querySelector(".thumb");
+  const videoImg = card.querySelector(".video-thumb");
+  const avatar = card.querySelector(".avatar");
   const usernameEl = card.querySelector(".username");
   const captionEl = card.querySelector(".caption");
   const status = card.querySelector(".status");
@@ -153,11 +171,15 @@ function loadVideo(index) {
       const data = json.data;
 
       // Thumbnail
-      img.src = data.origin_cover || data.cover;
-      img.onload = () => {
+      videoImg.src = data.origin_cover || data.cover;
+      videoImg.onload = () => {
         thumb.remove();
-        img.style.display = "block";
+        videoImg.style.display = "block";
       };
+
+      // Profile picture
+      avatar.src =
+        data.author?.avatar || data.author?.avatar_thumb || "";
 
       // Username
       const username =
@@ -186,7 +208,8 @@ function loadVideo(index) {
 
     } catch (e) {
       if (attempts >= MAX_ATTEMPTS) {
-        status.textContent = "Could not connect to TikTok server";
+        status.textContent =
+          "Could not connect to TikTok server";
         setTimeout(() => loadVideo(index + 1), 1200);
       } else {
         setTimeout(tryLoad, 1500);
