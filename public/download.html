@@ -131,6 +131,7 @@ async function loadVideo(index) {
   }
 
   /* Load NEXT video after current finishes */
+  loadVideo(index + 1);
   async function loadVideo(index) {
   if (index >= links.length) return;
 
@@ -185,7 +186,7 @@ async function loadVideo(index) {
   }
 
   tryLoad();
-  }
+    }
 }
 
 /* START LOADING */
