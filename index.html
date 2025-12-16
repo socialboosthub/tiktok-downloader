@@ -1,28 +1,107 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>TikTok Downloader</title>
-  </head>
-  <body style="text-align:center;font-family:sans-serif">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <h2>TikTok Downloader</h2>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f7f7f7;
+      margin: 0;
+      padding: 0;
+    }
 
-  <input id="link" placeholder="Paste TikTok link"
-   style="width:90%;padding:10px">
+    .container {
+      max-width: 480px;
+      margin: 40px auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 14px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+      text-align: center;
+    }
 
-   <br><br>
+    h1 {
+      font-size: 22px;
+      margin-bottom: 10px;
+    }
 
-   <button onclick="go()" style="padding:10px 20px">
-   Download
-   </button>
+    p {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 15px;
+    }
 
-   <script>
-   function go() {
-     const url = document.getElementById("link").value;
-       if(!url) return alert("Paste link");
-         location.href = "download.html?url=" + encodeURIComponent(url);
-         }
-         </script>
+    textarea {
+      width: 100%;
+      height: 140px;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+      resize: none;
+      box-sizing: border-box;
+    }
 
-         </body>
-         </html>
+    button {
+      margin-top: 18px;
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      border-radius: 10px;
+      border: none;
+      background: #000;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .note {
+      margin-top: 12px;
+      font-size: 12px;
+      color: #999;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+  <h1>TikTok Downloader</h1>
+  <p>Paste multiple TikTok links below<br>(one link per line)</p>
+
+  <textarea
+    id="links"
+    placeholder="https://www.tiktok.com/@user/video/123456789
+https://www.tiktok.com/@user/video/987654321">
+  </textarea>
+
+  <button onclick="go()">Process Links</button>
+
+  <div class="note">
+    Tip: You can download many videos one by one safely.
+  </div>
+</div>
+
+<script>
+function go() {
+  const links = document.getElementById("links").value.trim();
+
+  if (!links) {
+    alert("Please paste at least one TikTok link.");
+    return;
+  }
+
+  // Redirect to results page with all links
+  window.location.href =
+    "download.html?links=" + encodeURIComponent(links);
+}
+</script>
+
+</body>
+</html>
