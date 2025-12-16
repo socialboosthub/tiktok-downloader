@@ -25,6 +25,7 @@
       padding: 15px;
       border-radius: 12px;
       box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+      text-align: left;
     }
 
     .thumb {
@@ -50,6 +51,19 @@
       width: 100%;
       border-radius: 10px;
       display: none;
+      margin-top: 8px;
+    }
+
+    .username {
+      font-weight: 600;
+      margin-top: 8px;
+      font-size: 14px;
+    }
+
+    .caption {
+      font-size: 13px;
+      color: #555;
+      margin-top: 4px;
     }
 
     .status {
@@ -66,6 +80,7 @@
       background: #000;
       color: #fff;
       font-size: 15px;
+      width: 100%;
     }
   </style>
 </head>
@@ -91,7 +106,7 @@ const links = rawLinks
 
 const list = document.getElementById("list");
 
-/* STEP 1: CREATE ALL LOADING CARDS */
+/* STEP 1: CREATE ALL CARDS */
 const cards = links.map((_, i) => {
   const card = document.createElement("div");
   card.className = "card";
@@ -99,6 +114,8 @@ const cards = links.map((_, i) => {
   card.innerHTML = `
     <div class="thumb"></div>
     <img>
+    <div class="username"></div>
+    <div class="caption"></div>
     <div class="status">Loading video ${i + 1} of ${links.length}…</div>
   `;
 
@@ -106,16 +123,19 @@ const cards = links.map((_, i) => {
   return card;
 });
 
-/* STEP 2: LOAD VIDEOS ONE BY ONE (INFINITE RETRY) */
+/* STEP 2: LOAD VIDEOS SEQUENTIALLY */
 function loadVideo(index) {
   if (index >= links.length) return;
 
   const card = cards[index];
   const img = card.querySelector("img");
   const thumb = card.querySelector(".thumb");
+  const usernameEl = card.querySelector(".username");
+  const captionEl = card.querySelector(".caption");
   const status = card.querySelector(".status");
 
   let attempts = 0;
+  const MAX_ATTEMPTS = 3;
 
   async function tryLoad() {
     attempts++;
@@ -130,39 +150,54 @@ function loadVideo(index) {
       if (!res.ok) throw new Error("API blocked");
 
       const json = await res.json();
+      const data = json.data;
 
-      img.src = json.data.origin_cover || json.data.cover;
-
+      // Thumbnail
+      img.src = data.origin_cover || data.cover;
       img.onload = () => {
         thumb.remove();
         img.style.display = "block";
       };
 
+      // Username
+      const username =
+        data.author?.unique_id ||
+        data.author?.nickname ||
+        "Unknown user";
+      usernameEl.textContent = "@" + username;
+
+      // Caption
+      captionEl.textContent =
+        data.title || "No caption available";
+
+      // Download button
       const btn = document.createElement("button");
       btn.textContent = "Download Video";
       btn.onclick = () => {
         location.href =
-          `/download?url=${encodeURIComponent(json.data.play)}&name=tiktok_${index + 1}`;
+          `/download?url=${encodeURIComponent(data.play)}&name=tiktok_${index + 1}`;
       };
 
       status.textContent = "Ready to download";
       card.appendChild(btn);
 
-      // Load next video ONLY after success
       setTimeout(() => loadVideo(index + 1), 1200);
       return;
 
     } catch (e) {
-      const delay = Math.min(5000, attempts * 1500);
-      status.textContent = `Retrying… (attempt ${attempts})`;
-      setTimeout(tryLoad, delay);
+      if (attempts >= MAX_ATTEMPTS) {
+        status.textContent = "Could not connect to TikTok server";
+        setTimeout(() => loadVideo(index + 1), 1200);
+      } else {
+        setTimeout(tryLoad, 1500);
+      }
     }
   }
 
-  tryLoad(); // START LOADING
+  tryLoad();
 }
 
-/* START QUEUE */
+/* START */
 loadVideo(0);
 </script>
 
