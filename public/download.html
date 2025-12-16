@@ -1,16 +1,21 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Batch Download</title>
+  <meta charset="UTF-8">
+  <title>Preparing Downloads</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <style>
     body {
-      font-family: sans-serif;
+      font-family: system-ui, sans-serif;
       background: #f4f4f4;
       margin: 0;
-      padding: 10px;
+      padding: 12px;
       text-align: center;
+    }
+
+    h3 {
+      margin-bottom: 10px;
     }
 
     .card {
@@ -19,7 +24,7 @@
       margin: 15px auto;
       padding: 15px;
       border-radius: 12px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
     }
 
     .thumb {
@@ -58,8 +63,8 @@
       padding: 12px 20px;
       border: none;
       border-radius: 8px;
-      background: black;
-      color: white;
+      background: #000;
+      color: #fff;
       font-size: 15px;
     }
   </style>
@@ -74,6 +79,11 @@
 const params = new URLSearchParams(location.search);
 const rawLinks = params.get("links");
 
+if (!rawLinks) {
+  document.body.innerHTML = "<h3>No links provided</h3>";
+  throw new Error("No links");
+}
+
 const links = rawLinks
   .split("\n")
   .map(l => l.trim())
@@ -81,7 +91,7 @@ const links = rawLinks
 
 const list = document.getElementById("list");
 
-/* STEP 1: Create ALL cards immediately (with loaders) */
+/* STEP 1: CREATE ALL LOADING CARDS */
 const cards = links.map((_, i) => {
   const card = document.createElement("div");
   card.className = "card";
@@ -96,43 +106,8 @@ const cards = links.map((_, i) => {
   return card;
 });
 
-/* STEP 2: Load videos ONE BY ONE (lazy, ordered) */
-async function loadVideo(index) {
-  if (index >= links.length) return;
-
-  const card = cards[index];
-  const img = card.querySelector("img");
-  const thumb = card.querySelector(".thumb");
-  const status = card.querySelector(".status");
-
-  try {
-    const res = await fetch(`/api?url=${encodeURIComponent(links[index])}`);
-    const json = await res.json();
-
-    img.src = json.data.origin_cover || json.data.cover;
-
-    img.onload = () => {
-      thumb.remove();
-      img.style.display = "block";
-    };
-
-    const btn = document.createElement("button");
-    btn.textContent = "Download Video";
-    btn.onclick = () => {
-      location.href =
-        `/download?url=${encodeURIComponent(json.data.play)}&name=tiktok_${index + 1}`;
-    };
-
-    status.textContent = "Ready to download";
-    card.appendChild(btn);
-
-  } catch {
-    status.textContent = "Failed to load video";
-  }
-
-  /* Load NEXT video after current finishes */
-  loadVideo(index + 1);
-  async function loadVideo(index) {
+/* STEP 2: LOAD VIDEOS ONE BY ONE (INFINITE RETRY) */
+function loadVideo(index) {
   if (index >= links.length) return;
 
   const card = cards[index];
@@ -143,12 +118,16 @@ async function loadVideo(index) {
   let attempts = 0;
 
   async function tryLoad() {
+    attempts++;
+    status.textContent =
+      `Loading video ${index + 1} of ${links.length} (attempt ${attempts})…`;
+
     try {
       const res = await fetch(
         `/api?url=${encodeURIComponent(links[index])}`
       );
 
-      if (!res.ok) throw new Error("API error");
+      if (!res.ok) throw new Error("API blocked");
 
       const json = await res.json();
 
@@ -169,27 +148,21 @@ async function loadVideo(index) {
       status.textContent = "Ready to download";
       card.appendChild(btn);
 
-      // Delay BEFORE loading next video (IMPORTANT)
+      // Load next video ONLY after success
       setTimeout(() => loadVideo(index + 1), 1200);
       return;
 
     } catch (e) {
-      attempts++;
-      if (attempts < 2) {
-        status.textContent = "Retrying…";
-        setTimeout(tryLoad, 1500);
-      } else {
-        status.textContent = "Failed to load (skip)";
-        setTimeout(() => loadVideo(index + 1), 1200);
-      }
+      const delay = Math.min(5000, attempts * 1500);
+      status.textContent = `Retrying… (attempt ${attempts})`;
+      setTimeout(tryLoad, delay);
     }
   }
 
-  tryLoad();
-    }
+  tryLoad(); // START LOADING
 }
 
-/* START LOADING */
+/* START QUEUE */
 loadVideo(0);
 </script>
 
