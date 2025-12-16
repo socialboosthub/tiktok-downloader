@@ -21,7 +21,7 @@ app.get("/api", async (req, res) => {
   res.json(j);
 });
 
-app.get("/download", async (req, res) => {
+app.get("download.html", async (req, res) => {
   const videoUrl = req.query.url;
   const response = await fetch(videoUrl);
 
