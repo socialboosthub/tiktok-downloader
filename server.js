@@ -37,23 +37,33 @@ app.listen(PORT, () =>
   console.log("Server running on port " + PORT)
 );
 
-// Add this route to your existing server.js
-app.get('/api/profile', async (req, res) => {
-    const profileUrl = req.query.url;
-    
-    try {
-        // Here you would use an API or Scraper to get the profile videos
-        // For testing, we send dummy data:
-        const dummyData = {
-            username: "user123",
-            videos: [
-                { thumbnail: "https://via.placeholder.com/150", downloadUrl: "#" },
-                { thumbnail: "https://via.placeholder.com/150", downloadUrl: "#" }
-            ]
-        };
-        
-        res.json(dummyData);
-    } catch (error) {
-        res.status(500).json({ error: "Failed to fetch profile" });
-    }
+const express = require('express');
+const cors = require('cors');
+const TikTokScraper = require('tiktok-scraper');
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+app.use(express.static('public'));
+
+app.post('/profile', async (req, res) => {
+  try {
+    const { username } = req.body;
+
+    const user = await TikTokScraper.getUserProfileInfo(username);
+    const videos = await TikTokScraper.user(username, { number: 12 });
+
+    res.json({
+      profile: {
+        username: user.user.uniqueId,
+        bio: user.user.signature,
+        avatar: user.user.avatarLarger
+      },
+      videos: videos.collector
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch profile' });
+  }
 });
+
+app.listen(3000, () => console.log('Server running on http://localhost:3000'));
