@@ -1,3 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TikTok Profile Downloader</title>
+<style>
+  body {
+    font-family: 'Arial', sans-serif;
+    background: #f5f5f5;
+    margin: 0;
+    padding: 20px;
+    color: #333;
+  }
+  .container {
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .profile-card {
+    background: linear-gradient(135deg, #EE1D52, #25F4EE);
+    padding: 20px;
+    border-radius: 12px;
+    color: white;
+    margin-bottom: 20px;
+    transition: transform 0.3s ease;
+  }
+  .profile-card:hover { transform: scale(1.02); }
+  .profile-card img {
+    border-radius: 50%;
+    width: 100px;
+    margin-bottom: 10px;
+    border: 3px solid #fff;
+  }
+  .profile-card h2 { margin: 5px 0; }
+  .profile-card p { margin: 5px 0; opacity: 0.9; }
+
+  #video-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+  }
+  .video-card {
+    background: white;
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease;
+  }
+  .video-card:hover { transform: scale(1.03); }
+  .video-card video { width: 100%; border-radius: 8px; }
+  .video-card a {
+    display: inline-block;
+    margin-top: 5px;
+    padding: 6px 12px;
+    background: #25F4EE;
+    color: black;
+    font-weight: bold;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: background 0.3s ease;
+  }
+  .video-card a:hover { background: #1bb9b5; }
+
+  /* Loading animation */
+  .loader {
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #25F4EE;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    margin: 40px auto;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { 100% { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="container">
+  <div id="status" class="loader"></div>
+  <div id="profile-card" class="profile-card" style="display:none;"></div>
+  <div id="video-list"></div>
+</div>
+
 <script>
 const params = new URLSearchParams(window.location.search);
 const profileLink = params.get("links");
@@ -5,15 +89,13 @@ const profileLink = params.get("links");
 if (!profileLink) {
   document.getElementById("status").textContent = "No profile link provided";
 } else {
-  // Extract username
+  // Extract username from TikTok link
   const match = profileLink.match(/@([a-zA-Z0-9._]+)/);
   const username = match ? match[1] : null;
 
   if (!username) {
     document.getElementById("status").textContent = "Invalid TikTok profile link";
   } else {
-    document.getElementById("status").textContent = "Loading profile...";
-
     fetch("/profile", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -21,29 +103,36 @@ if (!profileLink) {
     })
     .then(res => res.json())
     .then(data => {
-      // Show profile
-      document.getElementById("status").innerHTML = `
-        <img src="${data.profile.avatar}" width="100" />
-        <h3>@${data.profile.username}</h3>
+      document.getElementById("status").style.display = "none";
+
+      // Show profile card
+      const profileCard = document.getElementById("profile-card");
+      profileCard.style.display = "block";
+      profileCard.innerHTML = `
+        <img src="${data.profile.avatar}" alt="Avatar">
+        <h2>@${data.profile.username}</h2>
         <p>${data.profile.bio}</p>
-        <h4>Videos:</h4>
-        <div id="video-list"></div>
       `;
-      
+
+      // Show videos
       const videoList = document.getElementById("video-list");
       data.videos.forEach(v => {
         const div = document.createElement("div");
+        div.className = "video-card";
         div.innerHTML = `
-          <video src="${v.videoUrl}" controls width="200"></video><br>
+          <video src="${v.videoUrl}" controls></video>
           <a href="${v.videoUrl}" download>Download</a>
         `;
         videoList.appendChild(div);
       });
     })
     .catch(err => {
+      document.getElementById("status").className = "";
       document.getElementById("status").textContent = "Failed to fetch profile";
       console.error(err);
     });
   }
 }
 </script>
+</body>
+</html>
