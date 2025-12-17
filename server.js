@@ -3,85 +3,103 @@ const fetch = require("node-fetch");
 const path = require("path");
 const app = express();
 
+// Serve all files (HTML/JS/CSS) from the root and public folder
+app.use(express.static(path.join(__dirname)));
 app.use(express.static(path.join(__dirname, "public")));
 
-// Home route
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
-// Main API handler with Cloudflare Bypass
-app.get("/api", async (req, res) => {
-  const videoUrl = req.query.url;
-  
+/**
+ * CORE FETCH FUNCTION: Mimics a real iPhone/Chrome browser
+ * to avoid the "Just a moment" Cloudflare screen.
+ */
+async function fetchTikWM(apiUrl) {
   try {
-    const response = await fetch(`https://tikwm.com/api/?url=${encodeURIComponent(videoUrl)}`, {
-      method: 'GET',
+    const response = await fetch(apiUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36',
-        'Accept': 'application/json, text/javascript, */*; q=0.01',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Referer': 'https://www.tikwm.com/',
-        'X-Requested-With': 'XMLHttpRequest'
+        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1",
+        "Accept": "application/json, text/javascript, */*; q=0.01",
+        "Referer": "https://www.tikwm.com/",
+        "X-Requested-With": "XMLHttpRequest"
       }
     });
 
     const text = await response.text();
-
-    // Check if Cloudflare blocked us
-    if (text.includes("Just a moment") || text.includes("<html")) {
-      console.error("BLOCK DETECTED: API returned HTML/Cloudflare instead of JSON.");
-      return res.status(403).json({ code: -1, msg: "Cloudflare Blocked Request" });
+    
+    // Check if we got HTML (Cloudflare) instead of JSON
+    if (text.includes("<html") || text.includes("Just a moment")) {
+      console.error("BLOCK DETECTED: Render's IP is currently being challenged by Cloudflare.");
+      return { code: -1, msg: "Cloudflare Challenge Active" };
     }
 
-    const data = JSON.parse(text);
-    res.json(data);
-    
-  } catch (error) {
-    console.error("Fetch Error:", error);
-    res.status(500).json({ code: -1, msg: "Server Error" });
+    return JSON.parse(text);
+  } catch (err) {
+    console.error("Fetch Error:", err.message);
+    return { code: -1, msg: "Connection Error" };
   }
+}
+
+// ROUTE 1: Single Video API
+app.get("/api", async (req, res) => {
+  const url = req.query.url;
+  if (!url) return res.json({ code: -1, msg: "No URL" });
+  const data = await fetchTikWM(`https://tikwm.com/api/?url=${encodeURIComponent(url)}`);
+  res.json(data);
 });
 
-// Profile downloader API
+// ROUTE 2: Profile API (Required for profile-download.html)
 app.get("/profile", async (req, res) => {
-  const profileUrl = req.query.url;
+  let url = req.query.url;
+  if (!url) return res.status(400).json({ error: "Missing URL" });
+
+  // Clean the URL (removes tracking junk like ?_r=1)
+  const cleanUrl = url.split('?')[0];
   const page = req.query.page || 0;
 
-  try {
-    const response = await fetch(`https://tikwm.com/api/user/posts?unique_id=${encodeURIComponent(profileUrl)}&count=12&cursor=${page}`, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36',
-        'Referer': 'https://www.tikwm.com/'
-      }
-    });
-    const data = await response.json();
-    res.json(data.data);
-  } catch (err) {
-    res.status(500).json({ error: "Failed to fetch profile" });
+  console.log(`Processing Profile: ${cleanUrl}`);
+
+  const j = await fetchTikWM(`https://tikwm.com/api/user/posts?url=${encodeURIComponent(cleanUrl)}&cursor=${page}`);
+
+  if (j.code === 0 && j.data && j.data.videos) {
+    // Format the response exactly as your HTML file expects
+    const formattedData = {
+      user: {
+        avatar: j.data.videos[0].author.avatar,
+        username: j.data.videos[0].author.unique_id,
+        following: "N/A",
+        followers: "N/A",
+        likes: "N/A"
+      },
+      videos: j.data.videos.map(v => ({
+        id: v.video_id,
+        cover: v.cover,
+        caption: v.title,
+        play: v.play
+      }))
+    };
+    res.json(formattedData);
+  } else {
+    res.status(500).json({ error: "Profile Not Found", details: j.msg });
   }
 });
 
-// Download Proxy (Fixes CORS and provides attachment)
+// ROUTE 3: Download Proxy
 app.get("/download", async (req, res) => {
-  const videoUrl = req.query.url;
-  const fileName = req.query.name || "tiktok_video";
-
   try {
-    const response = await fetch(videoUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36'
-      }
-    });
-
-    res.setHeader("Content-Disposition", `attachment; filename=${fileName}.mp4`);
+    const videoUrl = req.query.url;
+    const response = await fetch(videoUrl);
+    res.setHeader("Content-Disposition", `attachment; filename="tiktok.mp4"`);
     res.setHeader("Content-Type", "video/mp4");
     response.body.pipe(res);
-  } catch (error) {
+  } catch (e) {
     res.status(500).send("Download failed");
   }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
+// BIND TO RENDER PORT
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on port ${PORT}`);
+});
