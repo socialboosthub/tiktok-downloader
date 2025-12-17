@@ -9,8 +9,8 @@
 body {
   font-family: Arial, sans-serif;
   background: #f5f5f5;
-  padding: 20px;
   margin: 0;
+  padding: 15px;
 }
 
 .wrapper {
@@ -18,73 +18,72 @@ body {
   margin: auto;
 }
 
-/* Gradient Header */
-.gradient-box {
-  background: linear-gradient(to bottom, #EE1D52, #25F4EE);
-  padding: 20px;
-  border-radius: 12px;
-  text-align: center;
-  color: white;
-}
-
-/* Profile */
+/* PROFILE */
 .profile {
-  display: flex;
-  align-items: center;
   background: white;
   border-radius: 12px;
   padding: 15px;
-  margin-top: 15px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
 }
 
 .profile img {
-  width: 70px;
-  height: 70px;
+  width: 65px;
+  height: 65px;
   border-radius: 50%;
-  margin-right: 15px;
+  margin-right: 12px;
 }
 
 .stats {
   display: flex;
-  gap: 12px;
-  font-size: 13px;
+  gap: 10px;
+  font-size: 12px;
   color: #555;
-  margin-top: 5px;
 }
 
-/* Video Grid */
+/* GRID */
 .grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
-  margin-top: 20px;
 }
 
 .card {
   background: white;
   border-radius: 10px;
   overflow: hidden;
+  position: relative;
+}
+
+.thumb {
+  height: 160px;
+  background: linear-gradient(90deg,#eee,#ddd,#eee);
+  animation: pulse 1.2s infinite;
+}
+
+@keyframes pulse {
+  0% { background-position: 0% }
+  100% { background-position: 100% }
 }
 
 .card img {
+  display: none;
   width: 100%;
-  display: block;
 }
 
 .caption {
   padding: 6px;
   font-size: 12px;
-  color: #333;
 }
 
-/* Buttons */
-.video-actions {
+.actions {
   display: flex;
   gap: 6px;
   padding: 6px;
 }
 
-.video-actions button {
+.actions button {
   flex: 1;
   font-size: 11px;
   padding: 6px;
@@ -94,37 +93,24 @@ body {
   font-weight: bold;
 }
 
-.btn-download {
-  background: #000;
-  color: #fff;
+.btn {
+  background: black;
+  color: white;
 }
 
 .btn-4k {
   background: #25F4EE;
-  color: #000;
+  color: black;
 }
 
-.actions {
-  margin-top: 20px;
-  text-align: center;
+.status {
+  font-size: 11px;
+  padding: 4px;
+  color: #777;
 }
 
-.main-btn {
-  background: black;
-  color: white;
-  border: none;
-  padding: 12px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
-  width: 100%;
-  margin-bottom: 10px;
-}
-
-@media (max-width: 700px) {
-  .grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+@media(max-width:700px) {
+  .grid { grid-template-columns: repeat(2, 1fr); }
 }
 </style>
 </head>
@@ -132,56 +118,35 @@ body {
 <body>
 
 <div class="wrapper">
-
-  <div class="gradient-box">
-    <h2>Profile Video Downloader</h2>
-    <p>Download TikTok videos in HD & highest quality</p>
-  </div>
-
   <div id="profileInfo"></div>
   <div id="videos" class="grid"></div>
-
-  <div class="actions">
-    <button id="loadMore" class="main-btn" onclick="loadPage()" style="display:none">
-      Load More Videos
-    </button>
-
-    <button class="main-btn" onclick="goHome()">
-      Download Other Video
-    </button>
-  </div>
-
 </div>
 
 <script>
-const params = new URLSearchParams(window.location.search);
-const profileLink = params.get("links");
+const params = new URLSearchParams(location.search);
+const profileUrl = params.get("links");
 
 let page = 0;
-let hasMore = true;
+let queue = [];
+let index = 0;
 
-if (!profileLink) {
-  alert("No profile link provided");
+if (!profileUrl) {
+  alert("No profile URL");
 } else {
-  loadPage();
+  fetchProfile();
 }
 
-async function loadPage() {
-  if (!hasMore) return;
-
+async function fetchProfile() {
   const res = await fetch(
-    `/profile?url=${encodeURIComponent(profileLink)}&page=${page}`
+    `/profile?url=${encodeURIComponent(profileUrl)}&page=${page}`
   );
   const data = await res.json();
 
   if (page === 0) renderProfile(data.user);
-  renderVideos(data.videos);
 
-  hasMore = data.hasMore;
-  document.getElementById("loadMore").style.display =
-    hasMore ? "block" : "none";
-
-  page++;
+  queue.push(...data.videos);
+  renderPlaceholders(data.videos.length);
+  loadVideo(index);
 }
 
 function renderProfile(user) {
@@ -200,37 +165,75 @@ function renderProfile(user) {
   `;
 }
 
-function renderVideos(videos) {
+function renderPlaceholders(count) {
   const grid = document.getElementById("videos");
 
-  videos.forEach(v => {
-    const div = document.createElement("div");
-    div.className = "card";
-    div.innerHTML = `
-      <img src="${v.cover}">
-      <div class="caption">${v.caption || "No caption"}</div>
-      <div class="video-actions">
-        <button class="btn-download"
-          onclick="downloadVideo('${v.play}', 'tiktok_${v.id}')">
-          Download
-        </button>
-        <button class="btn-4k"
-          onclick="downloadVideo('${v.play}', 'tiktok_${v.id}_4k')">
-          Download 4K
-        </button>
-      </div>
+  for (let i = 0; i < count; i++) {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <div class="thumb"></div>
+      <img>
+      <div class="caption"></div>
+      <div class="actions"></div>
+      <div class="status">Loading…</div>
     `;
-    grid.appendChild(div);
-  });
+    grid.appendChild(card);
+  }
 }
 
-function downloadVideo(url, name) {
-  window.location.href =
+/* LAZY ONE-BY-ONE LOADER */
+async function loadVideo(i, attempt = 1) {
+  if (i >= queue.length) {
+    page++;
+    fetchProfile();
+    return;
+  }
+
+  const video = queue[i];
+  const card = document.querySelectorAll(".card")[i];
+  const img = card.querySelector("img");
+  const thumb = card.querySelector(".thumb");
+  const caption = card.querySelector(".caption");
+  const actions = card.querySelector(".actions");
+  const status = card.querySelector(".status");
+
+  try {
+    img.src = video.cover;
+
+    img.onload = () => {
+      thumb.remove();
+      img.style.display = "block";
+    };
+
+    caption.textContent = video.caption || "No caption";
+
+    actions.innerHTML = `
+      <button class="btn" onclick="download('${video.play}','tiktok_${video.id}')">
+        Download
+      </button>
+      <button class="btn-4k" onclick="download('${video.play}','tiktok_${video.id}_4k')">
+        4K
+      </button>
+    `;
+
+    status.textContent = "Ready";
+    setTimeout(() => loadVideo(i + 1), 1200);
+
+  } catch {
+    if (attempt < 3) {
+      status.textContent = "Retrying…";
+      setTimeout(() => loadVideo(i, attempt + 1), 1500);
+    } else {
+      status.textContent = "Could not reach TikTok server";
+      setTimeout(() => loadVideo(i + 1), 1200);
+    }
+  }
+}
+
+function download(url, name) {
+  location.href =
     `/download?url=${encodeURIComponent(url)}&name=${name}`;
-}
-
-function goHome() {
-  window.location.href = "/";
 }
 </script>
 
