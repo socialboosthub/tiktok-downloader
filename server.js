@@ -37,33 +37,50 @@ app.listen(PORT, () =>
   console.log("Server running on port " + PORT)
 );
 
-const express = require('express');
-const cors = require('cors');
-const TikTokScraper = require('tiktok-scraper');
-
-const app = express();
-app.use(cors());
-app.use(express.json());
-app.use(express.static('public'));
-
-app.post('/profile', async (req, res) => {
+app.get("/profile", async (req, res) => {
   try {
-    const { username } = req.body;
+    const { url, page = 0 } = req.query;
 
-    const user = await TikTokScraper.getUserProfileInfo(username);
-    const videos = await TikTokScraper.user(username, { number: 12 });
+    if (!url) {
+      return res.status(400).json({ error: "Profile URL required" });
+    }
+
+    const cursor = page * 6;
+
+    const username = url.split("/").filter(Boolean).pop();
+
+const apiUrl =
+  `https://tikwm.com/api/user/posts?unique_id=${encodeURIComponent(username)}&count=6&cursor=${cursor}`;
+
+    const response = await fetch(apiUrl);
+    const json = await response.json();
+
+    if (!json.data) {
+      return res.json({ hasMore: false, videos: [] });
+    }
+
+    const user = {
+      avatar: json.data.user.avatar_thumb,
+      username: json.data.user.unique_id,
+      followers: json.data.stats.followerCount,
+      following: json.data.stats.followingCount,
+      likes: json.data.stats.heartCount
+    };
+
+    const videos = json.data.videos.map(v => ({
+      id: v.video_id,
+      cover: v.cover,
+      caption: v.title,
+      play: v.play
+    }));
 
     res.json({
-      profile: {
-        username: user.user.uniqueId,
-        bio: user.user.signature,
-        avatar: user.user.avatarLarger
-      },
-      videos: videos.collector
+      user,
+      videos,
+      hasMore: json.data.hasMore
     });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch profile' });
+
+  } catch (e) {
+    res.status(500).json({ error: "Failed to fetch profile" });
   }
 });
-
-app.listen(3000, () => console.log('Server running on http://localhost:3000'));
