@@ -3,123 +3,238 @@
 <head>
 <meta charset="UTF-8">
 <title>TikTok Profile Downloader</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body {
   font-family: Arial, sans-serif;
   background: #f5f5f5;
   margin: 0;
-  padding: 20px;
+  padding: 15px;
 }
 
-.card {
+.wrapper {
   max-width: 500px;
   margin: auto;
+}
+
+/* PROFILE */
+.profile {
   background: white;
   border-radius: 12px;
-  padding: 20px;
-  text-align: center;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
 }
 
-.avatar {
-  width: 100px;
-  height: 100px;
+.profile img {
+  width: 65px;
+  height: 65px;
   border-radius: 50%;
-  object-fit: cover;
-  margin-bottom: 10px;
+  margin-right: 12px;
 }
 
-.username {
-  font-weight: bold;
-  font-size: 18px;
+.stats {
+  display: flex;
+  gap: 10px;
+  font-size: 12px;
+  color: #555;
 }
 
-.nickname {
-  color: gray;
-  margin-bottom: 20px;
-}
-
+/* GRID */
 .grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  gap: 10px;
+}
+
+.card {
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
 }
 
 .thumb {
-  width: 100%;
-  border-radius: 8px;
-  cursor: pointer;
+  height: 160px;
+  background: linear-gradient(90deg,#eee,#ddd,#eee);
+  animation: pulse 1.2s infinite;
 }
 
-.loading {
-  text-align: center;
-  padding: 40px;
+@keyframes pulse {
+  0% { background-position: 0% }
+  100% { background-position: 100% }
+}
+
+.card img {
+  display: none;
+  width: 100%;
+}
+
+.caption {
+  padding: 6px;
+  font-size: 12px;
+}
+
+.actions {
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+}
+
+.actions button {
+  flex: 1;
+  font-size: 11px;
+  padding: 6px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn {
+  background: black;
+  color: white;
+}
+
+.btn-4k {
+  background: #25F4EE;
+  color: black;
+}
+
+.status {
+  font-size: 11px;
+  padding: 4px;
+  color: #777;
+}
+
+@media(max-width:700px) {
+  .grid { grid-template-columns: repeat(2, 1fr); }
 }
 </style>
 </head>
 
 <body>
 
-<div class="card">
-  <div id="loading" class="loading">Loading profile…</div>
-
-  <img id="avatar" class="avatar" style="display:none">
-  <div id="username" class="username"></div>
-  <div id="nickname" class="nickname"></div>
-
+<div class="wrapper">
+  <div id="profileInfo"></div>
   <div id="videos" class="grid"></div>
 </div>
 
 <script>
-const params = new URLSearchParams(window.location.search);
-let input = params.get("links");
+const params = new URLSearchParams(location.search);
+const profileUrl = params.get("links");
 
-// 🔴 FIX: extract username from URL
-function extractUsername(text) {
-  if (!text) return null;
-  text = text.trim();
+let page = 0;
+let queue = [];
+let index = 0;
 
-  if (text.includes("tiktok.com")) {
-    let parts = text.split("/");
-    return parts.pop().replace("@", "") || parts.pop();
+if (!profileUrl) {
+  alert("No profile URL");
+} else {
+  fetchProfile();
+}
+
+async function fetchProfile() {
+  const res = await fetch(
+    `/profile?url=${encodeURIComponent(profileUrl)}&page=${page}`
+  );
+  const data = await res.json();
+
+  if (page === 0) renderProfile(data.user);
+
+  queue.push(...data.videos);
+  renderPlaceholders(data.videos.length);
+  loadVideo(index);
+}
+
+function renderProfile(user) {
+  document.getElementById("profileInfo").innerHTML = `
+    <div class="profile">
+      <img src="${user.avatar}">
+      <div>
+        <strong>@${user.username}</strong>
+        <div class="stats">
+          <div>${user.following} Following</div>
+          <div>${user.followers} Followers</div>
+          <div>${user.likes} Likes</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderPlaceholders(count) {
+  const grid = document.getElementById("videos");
+
+  for (let i = 0; i < count; i++) {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <div class="thumb"></div>
+      <img>
+      <div class="caption"></div>
+      <div class="actions"></div>
+      <div class="status">Loading…</div>
+    `;
+    grid.appendChild(card);
   }
-  return text.replace("@", "");
 }
 
-const username = extractUsername(input);
+/* LAZY ONE-BY-ONE LOADER */
+async function loadVideo(i, attempt = 1) {
+  if (i >= queue.length) {
+    page++;
+    fetchProfile();
+    return;
+  }
 
-if (!username) {
-  alert("Invalid profile link");
-  throw new Error("No username");
+  const video = queue[i];
+  const card = document.querySelectorAll(".card")[i];
+  const img = card.querySelector("img");
+  const thumb = card.querySelector(".thumb");
+  const caption = card.querySelector(".caption");
+  const actions = card.querySelector(".actions");
+  const status = card.querySelector(".status");
+
+  try {
+    img.src = video.cover;
+
+    img.onload = () => {
+      thumb.remove();
+      img.style.display = "block";
+    };
+
+    caption.textContent = video.caption || "No caption";
+
+    actions.innerHTML = `
+      <button class="btn" onclick="download('${video.play}','tiktok_${video.id}')">
+        Download
+      </button>
+      <button class="btn-4k" onclick="download('${video.play}','tiktok_${video.id}_4k')">
+        4K
+      </button>
+    `;
+
+    status.textContent = "Ready";
+    setTimeout(() => loadVideo(i + 1), 1200);
+
+  } catch {
+    if (attempt < 3) {
+      status.textContent = "Retrying…";
+      setTimeout(() => loadVideo(i, attempt + 1), 1500);
+    } else {
+      status.textContent = "Could not reach TikTok server";
+      setTimeout(() => loadVideo(i + 1), 1200);
+    }
+  }
 }
 
-fetch(`/profile?username=${username}`)
-  .then(res => res.json())
-  .then(data => {
-    document.getElementById("loading").style.display = "none";
-
-    document.getElementById("avatar").src = data.avatar;
-    document.getElementById("avatar").style.display = "block";
-
-    document.getElementById("username").textContent = "@" + data.username;
-    document.getElementById("nickname").textContent = data.nickname;
-
-    const grid = document.getElementById("videos");
-
-    data.videos.forEach(v => {
-      const img = document.createElement("img");
-      img.src = v.cover;
-      img.className = "thumb";
-      img.onclick = () => {
-        window.location.href = "/download?url=" + encodeURIComponent(v.play);
-      };
-      grid.appendChild(img);
-    });
-  })
-  .catch(() => {
-    alert("Failed to load profile");
-  });
+function download(url, name) {
+  location.href =
+    `/download?url=${encodeURIComponent(url)}&name=${name}`;
+}
 </script>
 
 </body>
