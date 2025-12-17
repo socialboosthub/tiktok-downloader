@@ -44,18 +44,23 @@ app.get("/profile", async (req, res) => {
       return res.status(400).json({ error: "Profile URL required" });
     }
 
-    const cursor = page * 6;
+    // Extract username from full TikTok URL
+    const username = url
+      .split("/")
+      .filter(Boolean)
+      .pop()
+      .replace("@", "");
 
-    const username = url.split("/").filter(Boolean).pop();
+    const cursor = Number(page) * 6;
 
-const apiUrl =
-  `https://tikwm.com/api/user/posts?unique_id=${encodeURIComponent(username)}&count=6&cursor=${cursor}`;
+    const apiUrl =
+      `https://tikwm.com/api/user/posts?unique_id=${username}&count=6&cursor=${cursor}`;
 
     const response = await fetch(apiUrl);
     const json = await response.json();
 
-    if (!json.data) {
-      return res.json({ hasMore: false, videos: [] });
+    if (!json.data || !json.data.user) {
+      return res.status(404).json({ error: "Profile not found" });
     }
 
     const user = {
@@ -79,7 +84,8 @@ const apiUrl =
       hasMore: json.data.hasMore
     });
 
-  } catch (e) {
-    res.status(500).json({ error: "Failed to fetch profile" });
+  } catch (err) {
+    console.error("PROFILE ERROR:", err);
+    res.status(500).json({ error: "Failed to load profile" });
   }
 });
