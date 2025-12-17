@@ -1,7 +1,7 @@
 const express = require("express");
 const fetch = require("node-fetch");
 const path = require("path");
-
+import fetch from "node-fetch";
 const app = express();
 // SERVE STATIC FILES
 app.use(express.static(path.join(__dirname, "public")));
