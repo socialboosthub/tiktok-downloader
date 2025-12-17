@@ -1,100 +1,112 @@
 const express = require("express");
 const fetch = require("node-fetch");
 const path = require("path");
+
 const app = express();
-// SERVE STATIC FILES
+
+/* =========================
+   STATIC FILES
+========================= */
 app.use(express.static(path.join(__dirname, "public")));
-// Home route (extra safety)
+
+/* =========================
+   HOME
+========================= */
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
+/* =========================
+   VIDEO INFO API
+========================= */
 app.get("/api", async (req, res) => {
-  const url = req.query.url;
-  const r = await fetch(
-    `https://tikwm.com/api/?url=${encodeURIComponent(url)}`
-  );
-  const j = await r.json();
-  res.json(j);
+  try {
+    const url = req.query.url;
+    if (!url) {
+      return res.status(400).json({ error: "URL is required" });
+    }
+
+    const r = await fetch(
+      `https://tikwm.com/api/?url=${encodeURIComponent(url)}`
+    );
+    const j = await r.json();
+    res.json(j);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch video info" });
+  }
 });
 
+/* =========================
+   VIDEO DOWNLOAD
+========================= */
 app.get("/download", async (req, res) => {
-  const videoUrl = req.query.url;
-  const response = await fetch(videoUrl);
+  try {
+    const videoUrl = req.query.url;
+    const name = req.query.name || "tiktok";
 
-  res.setHeader(
-    "Content-Disposition",
-    "attachment; filename=tiktok.mp4"
-  );
-  res.setHeader("Content-Type", "video/mp4");
+    if (!videoUrl) {
+      return res.status(400).send("Video URL missing");
+    }
 
-  response.body.pipe(res);
+    const response = await fetch(videoUrl);
+
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=${name}.mp4`
+    );
+    res.setHeader("Content-Type", "video/mp4");
+
+    response.body.pipe(res);
+  } catch (err) {
+    res.status(500).send("Download failed");
+  }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () =>
-  console.log("Server running on port " + PORT)
-);
-
+/* =========================
+   PROFILE DOWNLOADER API
+========================= */
 app.get("/profile", async (req, res) => {
   try {
-    const { url, page = 0 } = req.query;
-    if (!url) return res.status(400).json({ error: "Profile URL required" });
-
-    // ✅ SAFELY extract username
-    const cleanUrl = url.split("?")[0];
-    const username = cleanUrl
-      .split("/")
-      .filter(p => p.startsWith("@"))[0]
-      ?.replace("@", "");
-
+    let username = req.query.username;
     if (!username) {
-      return res.status(400).json({ error: "Invalid TikTok profile URL" });
+      return res.status(400).json({ error: "Username required" });
     }
 
-    const cursor = Number(page) * 6;
+    username = username.replace("@", "");
 
     const apiUrl =
-      `https://tikwm.com/api/user/posts?unique_id=${username}&count=6&cursor=${cursor}`;
+      `https://tikwm.com/api/user/posts?unique_id=${username}&count=8`;
 
-    const response = await fetch(apiUrl);
-    const text = await response.text();
+    const r = await fetch(apiUrl);
+    const j = await r.json();
 
-    // 🔒 Detect HTML block page
-    if (text.startsWith("<")) {
-      console.error("TikWM HTML response (blocked)");
-      return res.status(503).json({ error: "TikTok server blocked request" });
-    }
-
-    const json = JSON.parse(text);
-
-    if (!json.data || !json.data.user) {
+    if (!j.data || !j.data.user) {
       return res.status(404).json({ error: "Profile not found" });
     }
 
-    const user = {
-      avatar: json.data.user.avatar_thumb,
-      username: json.data.user.unique_id,
-      followers: json.data.stats.followerCount,
-      following: json.data.stats.followingCount,
-      likes: json.data.stats.heartCount
-    };
+    const user = j.data.user;
 
-    const videos = json.data.videos.map(v => ({
-      id: v.video_id,
-      cover: v.cover,
-      caption: v.title,
+    const videos = j.data.videos.slice(0, 8).map(v => ({
+      cover: v.cover || v.origin_cover,
       play: v.play
     }));
 
     res.json({
-      user,
-      videos,
-      hasMore: json.data.hasMore
+      username: user.unique_id,
+      nickname: user.nickname,
+      avatar: user.avatar,
+      videos
     });
 
   } catch (err) {
-    console.error("PROFILE ERROR:", err);
     res.status(500).json({ error: "Failed to load profile" });
   }
+});
+
+/* =========================
+   START SERVER
+========================= */
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log("Server running on port " + PORT);
 });
