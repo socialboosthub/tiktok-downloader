@@ -39,17 +39,18 @@ app.listen(PORT, () =>
 app.get("/profile", async (req, res) => {
   try {
     const { url, page = 0 } = req.query;
+    if (!url) return res.status(400).json({ error: "Profile URL required" });
 
-    if (!url) {
-      return res.status(400).json({ error: "Profile URL required" });
-    }
-
-    // Extract username from full TikTok URL
-    const username = url
+    // ✅ SAFELY extract username
+    const cleanUrl = url.split("?")[0];
+    const username = cleanUrl
       .split("/")
-      .filter(Boolean)
-      .pop()
-      .replace("@", "");
+      .filter(p => p.startsWith("@"))[0]
+      ?.replace("@", "");
+
+    if (!username) {
+      return res.status(400).json({ error: "Invalid TikTok profile URL" });
+    }
 
     const cursor = Number(page) * 6;
 
@@ -57,7 +58,15 @@ app.get("/profile", async (req, res) => {
       `https://tikwm.com/api/user/posts?unique_id=${username}&count=6&cursor=${cursor}`;
 
     const response = await fetch(apiUrl);
-    const json = await response.json();
+    const text = await response.text();
+
+    // 🔒 Detect HTML block page
+    if (text.startsWith("<")) {
+      console.error("TikWM HTML response (blocked)");
+      return res.status(503).json({ error: "TikTok server blocked request" });
+    }
+
+    const json = JSON.parse(text);
 
     if (!json.data || !json.data.user) {
       return res.status(404).json({ error: "Profile not found" });
