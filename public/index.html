@@ -1,236 +1,228 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>TikTok Downloader</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>TikTok Downloader</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; margin: 0; }
+        
+        /* RESTORED: Top Buttons with Margin and Vertical Gradient Slide */
+        .tab-container { 
+            display: flex; 
+            width: 100%;
+            gap: 8px; 
+            margin-bottom: 15px; /* Added back margin */
+        }
+        .filter-button {
+            flex: 1; 
+            padding: 10px 0; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            color: white; 
+            font-size: 12px;
+            font-weight: bold;
+            /* Original Gradient Design */
+            background: linear-gradient(to bottom, #EE1D52 50%, #25F4EE 50%);
+            background-size: 100% 200%; 
+            background-position: top; 
+            transition: background-position 0.4s ease, box-shadow 0.3s ease;
+            text-align: center;
+        }
+        .filter-button.selected { 
+            background-position: bottom; 
+            color: #000; 
+            box-shadow: inset 0 0 0 2px rgba(255,255,255,0.9);
+            opacity: 0.9;
+        }
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
-      padding: 20px;
-      margin: 0;
-    }
+        /* Main Area with Extended Gradient */
+        .gradient-box {
+            background: linear-gradient(to bottom, #EE1D52, #25F4EE); 
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            color: white;
+            max-width: 500px;
+            margin: 0 auto;
+        }
 
-    .tab-container {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 15px;
-    }
+        .gradient-box h1 { margin: 0 0 10px 0; font-size: 22px; }
+        .gradient-box p { margin: 0 0 20px 0; font-size: 14px; opacity: 0.9; }
 
-    .filter-button {
-      flex: 1;
-      padding: 10px 0;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      color: white;
-      font-size: 12px;
-      font-weight: bold;
-      background: linear-gradient(to bottom, #EE1D52 50%, #25F4EE 50%);
-      background-size: 100% 200%;
-      background-position: top;
-      transition: background-position 0.4s ease;
-    }
+        /* Input Styling */
+        .input-box { 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            border-radius: 8px; 
+            padding: 8px 12px; 
+            background: white; 
+            margin-bottom: 15px; 
+        }
+        .input-box input, .input-box textarea { 
+            flex: 1; 
+            border: none; 
+            outline: none; 
+            font-size: 16px; 
+            padding: 5px 0; 
+            color: #333;
+        }
+        .input-box textarea { height: 100px; resize: none; display: none; }
+        
+        /* Action Buttons (Paste/Clear) */
+        .action-btn { 
+            border: none; 
+            background: #25F4EE; 
+            color: #000; 
+            padding: 8px 12px; 
+            border-radius: 6px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            font-size: 13px;
+        }
+        #clear-btn { display: none; }
 
-    .filter-button.selected {
-      background-position: bottom;
-      color: #000;
-      box-shadow: inset 0 0 0 2px rgba(255,255,255,0.9);
-    }
-
-    .gradient-box {
-      background: linear-gradient(to bottom, #EE1D52, #25F4EE);
-      padding: 20px;
-      border-radius: 12px;
-      text-align: center;
-      color: white;
-      max-width: 500px;
-      margin: 0 auto;
-    }
-
-    .gradient-box h1 {
-      font-size: 22px;
-      margin-bottom: 10px;
-    }
-
-    .gradient-box p {
-      font-size: 14px;
-      margin-bottom: 20px;
-    }
-
-    .input-box {
-      display: flex;
-      gap: 8px;
-      padding: 10px;
-      background: white;
-      border-radius: 8px;
-      margin-bottom: 15px;
-    }
-
-    .input-box input,
-    .input-box textarea {
-      flex: 1;
-      border: none;
-      outline: none;
-      font-size: 16px;
-    }
-
-    .input-box textarea {
-      height: 100px;
-      resize: none;
-      display: none;
-    }
-
-    .action-btn {
-      background: #25F4EE;
-      border: none;
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    #clear-btn { display: none; }
-
-    .process-btn {
-      width: 100%;
-      height: 50px;
-      background: black;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: bold;
-      display: none;
-    }
-
-    .process-btn.active { display: block; }
-  </style>
+        /* Separate Process Buttons */
+        .process-btn { 
+            height: 50px; 
+            width: 100%; 
+            background: black; 
+            color: white; 
+            border-radius: 8px; 
+            border: none; 
+            cursor: pointer; 
+            font-size: 16px; 
+            display: none; 
+            font-weight: bold;
+        }
+        .process-btn.active { display: block; }
+        .process-btn:active { transform: scale(0.98); }
+    </style>
 </head>
-
 <body>
 
-<div style="max-width:500px;margin:auto">
+    <div style="max-width: 500px; margin: 0 auto;">
+        <div class="tab-container">
+            <button class="filter-button selected" onclick="switchTab(0)">Video</button>
+            <button class="filter-button" onclick="switchTab(1)">Profile</button>
+            <button class="filter-button" onclick="switchTab(2)">Story</button>
+            <button class="filter-button" onclick="switchTab(3)">Slider</button>
+            <button class="filter-button" onclick="switchTab(4)">Multi</button>
+        </div>
 
-  <div class="tab-container">
-    <button class="filter-button selected" onclick="switchTab(0)">Video</button>
-    <button class="filter-button" onclick="switchTab(1)">Profile</button>
-    <button class="filter-button" onclick="switchTab(2)">Story</button>
-    <button class="filter-button" onclick="switchTab(3)">Slider</button>
-    <button class="filter-button" onclick="switchTab(4)">Multi</button>
-  </div>
+        <div class="gradient-box">
+            <h1 id="page-title">Download TikTok Videos</h1>
+            <p id="page-desc">Paste any TikTok video link below and instantly download high-quality videos without watermarks.</p>
 
-  <div class="gradient-box">
-    <h1 id="page-title">Download TikTok Videos</h1>
-    <p id="page-desc">Paste any TikTok video link below</p>
+            <div class="input-box">
+                <input type="text" id="main-input" placeholder="Paste TikTok video link" oninput="toggleActionButtons()">
+                <textarea id="multi-input" placeholder="Paste links (one per line)" oninput="toggleActionButtons()"></textarea>
+                
+                <button class="action-btn" id="paste-btn" onclick="handlePaste()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+                    Paste
+                </button>
 
-    <div class="input-box">
-      <input id="main-input" placeholder="Paste TikTok video link" oninput="toggleBtns()">
-      <textarea id="multi-input" placeholder="Paste links (one per line)" oninput="toggleBtns()"></textarea>
+                <button class="action-btn" id="clear-btn" onclick="handleClear()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    Clear
+                </button>
+            </div>
 
-      <button class="action-btn" id="paste-btn" onclick="paste()">Paste</button>
-      <button class="action-btn" id="clear-btn" onclick="clearInput()">Clear</button>
+            <button id="pbtn-0" class="process-btn active" onclick="go('video-download.html')">Process Video Link</button>
+            <button id="pbtn-1" class="process-btn" onclick="go('profile-download.html')">Process Profile Link</button>
+            <button id="pbtn-2" class="process-btn" onclick="go('story-download.html')">Process Story Link</button>
+            <button id="pbtn-3" class="process-btn" onclick="go('slider-download.html')">Process Slider Link</button>
+            <button id="pbtn-4" class="process-btn" onclick="go('download.html')">Process Multi Links</button>
+        </div>
     </div>
 
-    <button class="process-btn active" id="p0" onclick="go('video-download.html')">Process Video</button>
-    <button class="process-btn" id="p1" onclick="go('profile.html')">Process Profile</button>
-    <button class="process-btn" id="p2">Process Story</button>
-    <button class="process-btn" id="p3">Process Slider</button>
-    <button class="process-btn" id="p4" onclick="go('download.html')">Process Multi</button>
-  </div>
+    <script>
+        const tabConfigs = [
+            { title: "Download TikTok Videos", desc: "Paste any TikTok video link below and instantly download high-quality videos.", ph: "Paste TikTok video link" },
+            { title: "TikTok Profile Downloader", desc: "Paste a TikTok profile link to download public videos in bulk.", ph: "Paste TikTok profile link" },
+            { title: "Free TikTok Story Saver", desc: "Save TikTok stories directly to your device before they disappear.", ph: "Paste TikTok story link" },
+            { title: "TikTok Slider Downloader", desc: "Download TikTok slider posts including all images or videos.", ph: "Paste TikTok slider link" },
+            { title: "TikTok Multi Downloader", desc: "Paste multiple TikTok links below (one per line).", ph: "https://www.tiktok.com/...\nhttps://www.tiktok.com/..." }
+        ];
 
-</div>
+        let activeTab = 0;
 
-<script>
-let activeTab = 0;
+        function switchTab(idx) {
+            activeTab = idx;
+            const btns = document.querySelectorAll('.filter-button');
+            const pBtns = document.querySelectorAll('.process-btn');
+            const mainInp = document.getElementById('main-input');
+            const multiInp = document.getElementById('multi-input');
 
-const titles = [
-  "Download TikTok Videos",
-  "TikTok Profile Downloader",
-  "TikTok Story Saver",
-  "TikTok Slider Downloader",
-  "TikTok Multi Downloader"
-];
+            // Handle Tab Selection Design
+            btns.forEach((b, i) => b.classList.toggle('selected', i === idx));
+            pBtns.forEach((p, i) => p.classList.toggle('active', i === idx));
 
-const descs = [
-  "Paste any TikTok video link below",
-  "Paste a TikTok profile link or username",
-  "Paste TikTok story link",
-  "Paste TikTok slider link",
-  "Paste multiple TikTok links"
-];
+            // Update Text
+            document.getElementById('page-title').textContent = tabConfigs[idx].title;
+            document.getElementById('page-desc').textContent = tabConfigs[idx].desc;
 
-function switchTab(i) {
-  activeTab = i;
+            // Toggle Input Type
+            if (idx === 4) {
+                mainInp.style.display = 'none';
+                multiInp.style.display = 'block';
+                multiInp.placeholder = tabConfigs[idx].ph;
+            } else {
+                mainInp.style.display = 'block';
+                multiInp.style.display = 'none';
+                mainInp.placeholder = tabConfigs[idx].ph;
+            }
+            handleClear(); // Clear on switch
+        }
 
-  document.querySelectorAll(".filter-button").forEach((b, x) =>
-    b.classList.toggle("selected", x === i)
-  );
+        function getVisibleInput() {
+            return activeTab === 4 ? document.getElementById('multi-input') : document.getElementById('main-input');
+        }
 
-  document.querySelectorAll(".process-btn").forEach((b, x) =>
-    b.classList.toggle("active", x === i)
-  );
+        function toggleActionButtons() {
+            const val = getVisibleInput().value;
+            const pasteBtn = document.getElementById('paste-btn');
+            const clearBtn = document.getElementById('clear-btn');
+            
+            // Show Clear if text exists, otherwise show Paste
+            if (val.length > 0) {
+                pasteBtn.style.display = 'none';
+                clearBtn.style.display = 'flex';
+            } else {
+                pasteBtn.style.display = 'flex';
+                clearBtn.style.display = 'none';
+            }
+        }
 
-  document.getElementById("page-title").innerText = titles[i];
-  document.getElementById("page-desc").innerText = descs[i];
+        async function handlePaste() {
+            const input = getVisibleInput();
+            try {
+                const text = await navigator.clipboard.readText();
+                if (text.toLowerCase().includes("tiktok.com")) {
+                    input.value = text;
+                    toggleActionButtons();
+                } else {
+                    alert("Link not found");
+                }
+            } catch (err) { alert("Clipboard access denied"); }
+        }
 
-  document.getElementById("main-input").style.display = i === 4 ? "none" : "block";
-  document.getElementById("multi-input").style.display = i === 4 ? "block" : "none";
+        function handleClear() {
+            const input = getVisibleInput();
+            input.value = "";
+            toggleActionButtons();
+        }
 
-  clearInput();
-}
-
-function toggleBtns() {
-  const val = getInput().value;
-  document.getElementById("paste-btn").style.display = val ? "none" : "block";
-  document.getElementById("clear-btn").style.display = val ? "block" : "none";
-}
-
-function getInput() {
-  return activeTab === 4
-    ? document.getElementById("multi-input")
-    : document.getElementById("main-input");
-}
-
-async function paste() {
-  const text = await navigator.clipboard.readText();
-  if (!text.includes("tiktok")) return alert("No TikTok link found");
-  getInput().value = text;
-  toggleBtns();
-}
-
-function clearInput() {
-  getInput().value = "";
-  toggleBtns();
-}
-
-function extractUsername(text) {
-  if (text.startsWith("@")) return text.replace("@","");
-  try {
-    const u = new URL(text);
-    return u.pathname.split("/")[1].replace("@","");
-  } catch {
-    return null;
-  }
-}
-
-function go(target) {
-  const val = getInput().value.trim();
-  if (!val) return alert("Paste a link first");
-
-  if (activeTab === 1) {
-    const user = extractUsername(val);
-    if (!user) return alert("Invalid profile");
-    location.href = "profile.html?username=" + encodeURIComponent(user);
-    return;
-  }
-
-  location.href = target + "?links=" + encodeURIComponent(val);
-}
-</script>
-
+        function go(targetFile) {
+            const links = getVisibleInput().value.trim();
+            if (!links) { alert("Please paste a link first"); return; }
+            window.location.href = targetFile + "?links=" + encodeURIComponent(links);
+        }
+    </script>
 </body>
 </html>
-
