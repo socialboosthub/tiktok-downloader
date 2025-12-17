@@ -1,24 +1,49 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Profile Downloader</title>
-</head>
-<body>
-
-<h2>Profile Downloader</h2>
-<p id="status">Loading...</p>
-
 <script>
-  const params = new URLSearchParams(window.location.search);
-  const profileLink = params.get("links");
+const params = new URLSearchParams(window.location.search);
+const profileLink = params.get("links");
 
-  if (!profileLink) {
-    document.getElementById("status").textContent = "No profile link provided";
+if (!profileLink) {
+  document.getElementById("status").textContent = "No profile link provided";
+} else {
+  // Extract username
+  const match = profileLink.match(/@([a-zA-Z0-9._]+)/);
+  const username = match ? match[1] : null;
+
+  if (!username) {
+    document.getElementById("status").textContent = "Invalid TikTok profile link";
   } else {
-    document.getElementById("status").textContent =
-      "Profile link received: " + profileLink;
-  }
-</script>
+    document.getElementById("status").textContent = "Loading profile...";
 
-</body>
-</html>
+    fetch("/profile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username })
+    })
+    .then(res => res.json())
+    .then(data => {
+      // Show profile
+      document.getElementById("status").innerHTML = `
+        <img src="${data.profile.avatar}" width="100" />
+        <h3>@${data.profile.username}</h3>
+        <p>${data.profile.bio}</p>
+        <h4>Videos:</h4>
+        <div id="video-list"></div>
+      `;
+      
+      const videoList = document.getElementById("video-list");
+      data.videos.forEach(v => {
+        const div = document.createElement("div");
+        div.innerHTML = `
+          <video src="${v.videoUrl}" controls width="200"></video><br>
+          <a href="${v.videoUrl}" download>Download</a>
+        `;
+        videoList.appendChild(div);
+      });
+    })
+    .catch(err => {
+      document.getElementById("status").textContent = "Failed to fetch profile";
+      console.error(err);
+    });
+  }
+}
+</script>
