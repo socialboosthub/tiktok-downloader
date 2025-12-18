@@ -17,7 +17,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // 2. MAIN ROUTES
 // Home Page
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index (1).html"));
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 // Explicit route for Profile Page (Fixes "Cannot GET /profile-download.html")
