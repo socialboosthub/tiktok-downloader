@@ -5,50 +5,79 @@ const app = express();
 
 app.use(express.static(path.join(__dirname, "public")));
 
-// Home route
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
-// Single Video API
+// Single Video API (Works for your lazy loading)
 app.get("/api", async (req, res) => {
+  const url = req.query.url;
   try {
-    const url = req.query.url;
-    const r = await fetch(`https://tikwm.com/api/?url=${encodeURIComponent(url)}`);
+    const r = await fetch(
+      `https://tikwm.com/api/?url=${encodeURIComponent(url)}`
+    );
     const j = await r.json();
     res.json(j);
-  } catch (err) {
-    res.status(500).json({ code: -1, msg: "Server Error" });
+  } catch (e) {
+    res.status(500).json({ error: "API Error" });
   }
 });
 
-// NEW: Profile API Route
+// NEW: Profile Endpoint
 app.get("/profile", async (req, res) => {
+  const profileUrl = req.query.url;
+  
+  // 1. Extract Username from URL (e.g., @user)
+  const match = profileUrl.match(/@([a-zA-Z0-9_.-]+)/);
+  if (!match) {
+    return res.json({ error: "Invalid username" });
+  }
+  const unique_id = match[1];
+
+  // 2. Fetch list of posts (Standard limit is ~30 per request)
   try {
-    const input = req.query.url;
-    // Extract username if a full URL was provided
-    const username = input.includes("@") ? input.split("@")[1].split("?")[0] : input;
-    
-    // We use the TikWM user/posts endpoint which is more stable for profiles
-    const apiUrl = `https://tikwm.com/api/user/posts?unique_id=${username}&count=12&cursor=0`;
-    
+    const apiUrl = `https://www.tikwm.com/api/user/posts?unique_id=${unique_id}&count=30`;
     const r = await fetch(apiUrl);
-    const j = await r.json();
-    res.json(j);
-  } catch (err) {
-    res.status(500).json({ code: -1, msg: "Profile fetch failed" });
+    const json = await r.json();
+
+    if (!json.data || !json.data.videos) {
+      return res.json({ error: "No videos found or private profile", videos: [] });
+    }
+
+    // 3. Return just the profile info and a list of Video URLs
+    // We do NOT return full video data here to force the frontend to "lazy load" them one by one
+    const videoLinks = json.data.videos.map(v => 
+      `https://www.tiktok.com/@${json.data.author.unique_id}/video/${v.video_id}`
+    );
+
+    res.json({
+      user: {
+        username: json.data.author.unique_id,
+        avatar: json.data.author.avatar,
+        followers: json.data.author.followers || 0,
+        following: json.data.author.following || 0,
+        likes: json.data.author.heart || 0
+      },
+      links: videoLinks // The frontend will process these one by one
+    });
+
+  } catch (e) {
+    console.error(e);
+    res.json({ error: "Server Error", videos: [] });
   }
 });
 
-// Proxy Download to avoid CORs/Filename issues
 app.get("/download", async (req, res) => {
   const videoUrl = req.query.url;
-  const fileName = req.query.name || "tiktok";
-  const response = await fetch(videoUrl);
-
-  res.setHeader("Content-Disposition", `attachment; filename=${fileName}.mp4`);
-  res.setHeader("Content-Type", "video/mp4");
-  response.body.pipe(res);
+  const name = req.query.name || "tiktok";
+  try {
+    const response = await fetch(videoUrl);
+    res.setHeader("Content-Disposition", `attachment; filename=${name}.mp4`);
+    res.setHeader("Content-Type", "video/mp4");
+    response.body.pipe(res);
+  } catch (e) {
+    res.status(500).send("Download Error");
+  }
 });
 
 const PORT = process.env.PORT || 3000;
