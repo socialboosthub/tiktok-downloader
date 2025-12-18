@@ -60,122 +60,57 @@ body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 
 </div>
 
 <script>
-const params = new URLSearchParams(location.search);
-const profileUrl = params.get("links");
-const grid = document.getElementById("videos");
-let videoQueue = []; // Holds the list of links
+async function fetchProfile() {
+  const res = await fetch(`/profile?url=${encodeURIComponent(profileUrl)}`);
+  const data = await res.json();
 
-// 1. INITIALIZE
-if (!profileUrl) {
-  document.getElementById("profileInfo").innerHTML = "<h3>No Profile URL Provided</h3>";
-} else {
-  initProfile();
-}
-
-async function initProfile() {
-  try {
-    // Call the new Server endpoint
-    const res = await fetch(`/profile?url=${encodeURIComponent(profileUrl)}`);
-    const data = await res.json();
-
-    if (data.error || !data.links) {
-      document.getElementById("profileInfo").innerHTML = `<h3>${data.error || "Error loading profile"}</h3>`;
-      return;
-    }
-
-    // Render Header
-    renderProfileHeader(data.user);
-
-    // Prepare Queue and Render Empty Cards
-    videoQueue = data.links;
-    renderPlaceholders(videoQueue.length);
-
-    // Start Lazy Loading Loop
-    processQueue(0);
-
-  } catch (err) {
-    document.getElementById("profileInfo").innerHTML = "<h3>Network Error</h3>";
+  if (data.error) {
+    document.getElementById("profileInfo").innerHTML = `<h3>${data.error}</h3>`;
+    return;
   }
+
+  renderProfile(data.user);
+  queue = data.links; // Array of video URLs
+  renderPlaceholders(queue.length);
+  processQueue(0);
 }
 
-function renderProfileHeader(user) {
-  document.getElementById("profileInfo").innerHTML = `
-    <div class="profile">
-      <img src="${user.avatar}">
-      <div>
-        <div style="font-size:18px; font-weight:bold;">@${user.username}</div>
-        <div class="stats">
-          <span><b>${user.followers}</b> Followers</span>
-          <span><b>${user.likes}</b> Likes</span>
-        </div>
-      </div>
-    </div>
-  `;
-}
+async function processQueue(i) {
+  if (i >= queue.length) return;
 
-function renderPlaceholders(count) {
-  grid.innerHTML = "";
-  for (let i = 0; i < count; i++) {
-    const card = document.createElement("div");
-    card.className = "card";
-    card.id = `card-${i}`;
-    card.innerHTML = `
-      <div class="thumb-placeholder"></div>
-      <img id="img-${i}">
-      <div class="info">
-        <div class="status" id="status-${i}">Waiting in queue...</div>
-        <button id="btn-${i}" class="btn" disabled>Waiting...</button>
-      </div>
-    `;
-    grid.appendChild(card);
-  }
-}
+  const card = document.querySelectorAll(".card")[i];
+  const status = card.querySelector(".status");
+  const img = card.querySelector("img");
+  const thumb = card.querySelector(".thumb");
+  const actions = card.querySelector(".actions");
 
-// 2. LAZY LOADING LOGIC (Your specific request)
-async function processQueue(index) {
-  if (index >= videoQueue.length) return; // Done
-
-  const link = videoQueue[index];
-  const statusEl = document.getElementById(`status-${index}`);
-  const btnEl = document.getElementById(`btn-${index}`);
-  const imgEl = document.getElementById(`img-${index}`);
-  const placeholder = document.getElementById(`card-${index}`).querySelector('.thumb-placeholder');
-
-  statusEl.textContent = "Fetching details...";
-  
   try {
-    // Call the SINGLE video API for this specific link
-    const res = await fetch(`/api?url=${encodeURIComponent(link)}`);
+    const res = await fetch(`/api?url=${encodeURIComponent(queue[i])}`);
     const json = await res.json();
-    const data = json.data;
+    const videoData = json.data;
 
-    if (data) {
-      // Update UI
-      imgEl.src = data.cover;
-      imgEl.onload = () => {
-        placeholder.style.display = 'none';
-        imgEl.style.display = 'block';
+    if (videoData) {
+      img.src = videoData.cover;
+      img.onload = () => {
+        thumb.remove();
+        img.style.display = "block";
       };
       
-      statusEl.textContent = "Ready";
-      btnEl.textContent = "Download Video";
-      btnEl.disabled = false;
-      btnEl.onclick = () => {
-        location.href = `/download?url=${encodeURIComponent(data.play)}&name=tiktok_${index}`;
-      };
+      actions.innerHTML = `
+        <button class="btn" onclick="download('${videoData.play}','tiktok_${videoData.id}')">Download</button>
+      `;
+      status.textContent = "Ready";
     } else {
-      statusEl.textContent = "Failed to load";
+      status.textContent = "Failed to load";
     }
-
   } catch (e) {
-    statusEl.textContent = "Error";
+    status.textContent = "Error";
   }
 
-  // 3. THE DELAY (1.2 seconds before next one)
-  setTimeout(() => {
-    processQueue(index + 1);
-  }, 1200);
+  // 1.2 second delay before processing the next video
+  setTimeout(() => processQueue(i + 1), 1200);
 }
+
 </script>
 
 </body>
