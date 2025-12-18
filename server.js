@@ -6,20 +6,31 @@ import { fileURLToPath } from 'url';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Fix for __dirname in ES Modules
+// Recreate __dirname for ES Modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Serve static files from the root or public folder
-app.use(express.static(__dirname)); 
+// 1. SERVE STATIC FILES
+// This allows the browser to find CSS, JS, and HTML files inside the /public folder
+app.use(express.static(path.join(__dirname, 'public')));
 
+// 2. MAIN ROUTES
+// Home Page
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  res.sendFile(path.join(__dirname, "public", "index (1).html"));
 });
 
-// Single Video API (Lazy loading uses this)
+// Explicit route for Profile Page (Fixes "Cannot GET /profile-download.html")
+app.get("/profile-download.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "profile-download.html"));
+});
+
+// 3. API ENDPOINTS
+// Single Video Data (Used by Lazy Loader to bypass blocks)
 app.get("/api", async (req, res) => {
   const videoUrl = req.query.url;
+  if (!videoUrl) return res.status(400).json({ error: "No URL" });
+
   try {
     const response = await gotScraping({
       url: 'https://tikwm.com/api/',
@@ -28,16 +39,17 @@ app.get("/api", async (req, res) => {
     });
     res.json(response.body);
   } catch (error) {
-    res.status(500).json({ error: "API Error" });
+    console.error("API Error:", error.message);
+    res.status(500).json({ error: "Failed to fetch video" });
   }
 });
 
-// Profile Endpoint
+// Profile List Fetcher
 app.get("/profile", async (req, res) => {
   const profileUrl = req.query.url;
-  const match = profileUrl.match(/@([a-zA-Z0-9_.-]+)/);
+  const match = profileUrl?.match(/@([a-zA-Z0-9_.-]+)/);
   
-  if (!match) return res.json({ error: "Invalid username" });
+  if (!match) return res.json({ error: "Invalid TikTok username link" });
   const unique_id = match[1];
 
   try {
@@ -48,8 +60,11 @@ app.get("/profile", async (req, res) => {
     });
 
     const data = response.body.data;
-    if (!data || !data.videos) return res.json({ error: "No videos found", videos: [] });
+    if (!data || !data.videos) {
+      return res.json({ error: "No videos found or profile is private" });
+    }
 
+    // Return profile metadata and a list of links for the frontend to loop through
     const videoLinks = data.videos.map(v => 
       `https://www.tiktok.com/@${data.author.unique_id}/video/${v.video_id}`
     );
@@ -64,22 +79,24 @@ app.get("/profile", async (req, res) => {
       links: videoLinks
     });
   } catch (e) {
-    res.status(502).json({ error: "Blocked by Cloudflare" });
+    console.error("Profile Fetch Error:", e.message);
+    res.status(502).json({ error: "Service temporarily blocked by Cloudflare" });
   }
 });
 
-// Download Proxy
+// 4. DOWNLOAD PROXY (Bypass CORs and naming issues)
 app.get("/download", async (req, res) => {
   const videoUrl = req.query.url;
-  const name = req.query.name || "video";
+  const name = req.query.name || "tiktok_video";
+
   try {
     const response = await gotScraping({ url: videoUrl, responseType: 'buffer' });
     res.setHeader("Content-Disposition", `attachment; filename=${name}.mp4`);
     res.setHeader("Content-Type", "video/mp4");
     res.send(response.body);
   } catch (e) {
-    res.status(500).send("Download error");
+    res.status(500).send("Download failed");
   }
 });
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
