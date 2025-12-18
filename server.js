@@ -14,7 +14,7 @@ const __dirname = path.dirname(__filename);
 app.use(express.static(__dirname)); 
 
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "index (1).html"));
+  res.sendFile(path.join(__dirname, "index.html"));
 });
 
 // Single Video API (Lazy loading uses this)
