@@ -8,6 +8,6 @@
   },
   "dependencies": {
     "express": "^4.18.2",
-    "got-scraping": "^4.0.0"
+    "got-scraping": "^4.0.1"
   }
 }
