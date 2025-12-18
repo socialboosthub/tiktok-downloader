@@ -6,159 +6,107 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body {
-  font-family: Arial, sans-serif;
-  background: #f5f5f5;
-  margin: 0;
-  padding: 15px;
-}
+body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 15px; }
+.wrapper { max-width: 600px; margin: auto; }
 
-.wrapper {
-  max-width: 500px;
-  margin: auto;
-}
-
-/* PROFILE */
+/* PROFILE HEADER */
 .profile {
-  background: white;
-  border-radius: 12px;
-  padding: 15px;
-  display: flex;
-  align-items: center;
-  margin-bottom: 15px;
+  background: white; border-radius: 12px; padding: 15px;
+  display: flex; align-items: center; margin-bottom: 20px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
-
 .profile img {
-  width: 65px;
-  height: 65px;
-  border-radius: 50%;
-  margin-right: 12px;
+  width: 70px; height: 70px; border-radius: 50%; margin-right: 15px; border: 2px solid #eee;
 }
+.stats { display: flex; gap: 15px; font-size: 13px; color: #555; margin-top: 5px; }
 
-.stats {
-  display: flex;
-  gap: 10px;
-  font-size: 12px;
-  color: #555;
-}
-
-/* GRID */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
+/* VIDEO GRID */
+.grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
 
 .card {
-  background: white;
-  border-radius: 10px;
-  overflow: hidden;
-  position: relative;
+  background: white; border-radius: 10px; overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08); position: relative;
 }
 
-.thumb {
-  height: 160px;
-  background: linear-gradient(90deg,#eee,#ddd,#eee);
-  animation: pulse 1.2s infinite;
+/* SKELETON LOADER */
+.thumb-placeholder {
+  height: 250px; width: 100%;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
 }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-@keyframes pulse {
-  0% { background-position: 0% }
-  100% { background-position: 100% }
-}
+.card img { display: none; width: 100%; height: 250px; object-fit: cover; }
+.info { padding: 10px; }
+.status { font-size: 11px; color: #888; margin-bottom: 8px; }
 
-.card img {
-  display: none;
-  width: 100%;
-}
-
-.caption {
-  padding: 6px;
-  font-size: 12px;
-}
-
-.actions {
-  display: flex;
-  gap: 6px;
-  padding: 6px;
-}
-
-.actions button {
-  flex: 1;
-  font-size: 11px;
-  padding: 6px;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
-  font-weight: bold;
-}
-
+/* BUTTONS */
 .btn {
-  background: black;
-  color: white;
+  width: 100%; padding: 10px; border: none; border-radius: 6px;
+  background: #000; color: #fff; font-weight: bold; cursor: pointer;
+  font-size: 13px;
 }
+.btn:disabled { background: #ccc; cursor: not-allowed; }
 
-.btn-4k {
-  background: #25F4EE;
-  color: black;
-}
-
-.status {
-  font-size: 11px;
-  padding: 4px;
-  color: #777;
-}
-
-@media(max-width:700px) {
-  .grid { grid-template-columns: repeat(2, 1fr); }
-}
+@media(max-width:500px) { .grid { grid-template-columns: 1fr; } }
 </style>
 </head>
-
 <body>
 
 <div class="wrapper">
-  <div id="profileInfo"></div>
+  <div id="profileInfo"><h3>Loading Profile...</h3></div>
   <div id="videos" class="grid"></div>
 </div>
 
 <script>
 const params = new URLSearchParams(location.search);
 const profileUrl = params.get("links");
+const grid = document.getElementById("videos");
+let videoQueue = []; // Holds the list of links
 
-let page = 0;
-let queue = [];
-let index = 0;
-
+// 1. INITIALIZE
 if (!profileUrl) {
-  alert("No profile URL");
+  document.getElementById("profileInfo").innerHTML = "<h3>No Profile URL Provided</h3>";
 } else {
-  fetchProfile();
+  initProfile();
 }
 
-async function fetchProfile() {
-  const res = await fetch(
-    `/profile?url=${encodeURIComponent(profileUrl)}&page=${page}`
-  );
-  const data = await res.json();
+async function initProfile() {
+  try {
+    // Call the new Server endpoint
+    const res = await fetch(`/profile?url=${encodeURIComponent(profileUrl)}`);
+    const data = await res.json();
 
-  if (page === 0) renderProfile(data.user);
+    if (data.error || !data.links) {
+      document.getElementById("profileInfo").innerHTML = `<h3>${data.error || "Error loading profile"}</h3>`;
+      return;
+    }
 
-  queue.push(...data.videos);
-  renderPlaceholders(data.videos.length);
-  loadVideo(index);
+    // Render Header
+    renderProfileHeader(data.user);
+
+    // Prepare Queue and Render Empty Cards
+    videoQueue = data.links;
+    renderPlaceholders(videoQueue.length);
+
+    // Start Lazy Loading Loop
+    processQueue(0);
+
+  } catch (err) {
+    document.getElementById("profileInfo").innerHTML = "<h3>Network Error</h3>";
+  }
 }
 
-function renderProfile(user) {
+function renderProfileHeader(user) {
   document.getElementById("profileInfo").innerHTML = `
     <div class="profile">
       <img src="${user.avatar}">
       <div>
-        <strong>@${user.username}</strong>
+        <div style="font-size:18px; font-weight:bold;">@${user.username}</div>
         <div class="stats">
-          <div>${user.following} Following</div>
-          <div>${user.followers} Followers</div>
-          <div>${user.likes} Likes</div>
+          <span><b>${user.followers}</b> Followers</span>
+          <span><b>${user.likes}</b> Likes</span>
         </div>
       </div>
     </div>
@@ -166,74 +114,67 @@ function renderProfile(user) {
 }
 
 function renderPlaceholders(count) {
-  const grid = document.getElementById("videos");
-
+  grid.innerHTML = "";
   for (let i = 0; i < count; i++) {
     const card = document.createElement("div");
     card.className = "card";
+    card.id = `card-${i}`;
     card.innerHTML = `
-      <div class="thumb"></div>
-      <img>
-      <div class="caption"></div>
-      <div class="actions"></div>
-      <div class="status">Loading…</div>
+      <div class="thumb-placeholder"></div>
+      <img id="img-${i}">
+      <div class="info">
+        <div class="status" id="status-${i}">Waiting in queue...</div>
+        <button id="btn-${i}" class="btn" disabled>Waiting...</button>
+      </div>
     `;
     grid.appendChild(card);
   }
 }
 
-/* LAZY ONE-BY-ONE LOADER */
-async function loadVideo(i, attempt = 1) {
-  if (i >= queue.length) {
-    page++;
-    fetchProfile();
-    return;
-  }
+// 2. LAZY LOADING LOGIC (Your specific request)
+async function processQueue(index) {
+  if (index >= videoQueue.length) return; // Done
 
-  const video = queue[i];
-  const card = document.querySelectorAll(".card")[i];
-  const img = card.querySelector("img");
-  const thumb = card.querySelector(".thumb");
-  const caption = card.querySelector(".caption");
-  const actions = card.querySelector(".actions");
-  const status = card.querySelector(".status");
+  const link = videoQueue[index];
+  const statusEl = document.getElementById(`status-${index}`);
+  const btnEl = document.getElementById(`btn-${index}`);
+  const imgEl = document.getElementById(`img-${index}`);
+  const placeholder = document.getElementById(`card-${index}`).querySelector('.thumb-placeholder');
 
+  statusEl.textContent = "Fetching details...";
+  
   try {
-    img.src = video.cover;
+    // Call the SINGLE video API for this specific link
+    const res = await fetch(`/api?url=${encodeURIComponent(link)}`);
+    const json = await res.json();
+    const data = json.data;
 
-    img.onload = () => {
-      thumb.remove();
-      img.style.display = "block";
-    };
-
-    caption.textContent = video.caption || "No caption";
-
-    actions.innerHTML = `
-      <button class="btn" onclick="download('${video.play}','tiktok_${video.id}')">
-        Download
-      </button>
-      <button class="btn-4k" onclick="download('${video.play}','tiktok_${video.id}_4k')">
-        4K
-      </button>
-    `;
-
-    status.textContent = "Ready";
-    setTimeout(() => loadVideo(i + 1), 1200);
-
-  } catch {
-    if (attempt < 3) {
-      status.textContent = "Retrying…";
-      setTimeout(() => loadVideo(i, attempt + 1), 1500);
+    if (data) {
+      // Update UI
+      imgEl.src = data.cover;
+      imgEl.onload = () => {
+        placeholder.style.display = 'none';
+        imgEl.style.display = 'block';
+      };
+      
+      statusEl.textContent = "Ready";
+      btnEl.textContent = "Download Video";
+      btnEl.disabled = false;
+      btnEl.onclick = () => {
+        location.href = `/download?url=${encodeURIComponent(data.play)}&name=tiktok_${index}`;
+      };
     } else {
-      status.textContent = "Could not reach TikTok server";
-      setTimeout(() => loadVideo(i + 1), 1200);
+      statusEl.textContent = "Failed to load";
     }
-  }
-}
 
-function download(url, name) {
-  location.href =
-    `/download?url=${encodeURIComponent(url)}&name=${name}`;
+  } catch (e) {
+    statusEl.textContent = "Error";
+  }
+
+  // 3. THE DELAY (1.2 seconds before next one)
+  setTimeout(() => {
+    processQueue(index + 1);
+  }, 1200);
 }
 </script>
 
