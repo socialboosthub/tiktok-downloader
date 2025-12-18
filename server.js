@@ -1,70 +1,55 @@
 import express from 'express';
 import { gotScraping } from 'got-scraping';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Serve static files from the current directory + /public
-// (In ESM mode, we use process.cwd() instead of __dirname)
-app.use(express.static(path.join(process.cwd(), "public")));
+// Fix for __dirname in ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// Home route
+// Serve static files from the root or public folder
+app.use(express.static(__dirname)); 
+
 app.get("/", (req, res) => {
-  res.sendFile(path.join(process.cwd(), "index (1).html")); 
+  res.sendFile(path.join(__dirname, "index (1).html"));
 });
 
-// --- API 1: Single Video Details (Lazy Loader uses this) ---
+// Single Video API (Lazy loading uses this)
 app.get("/api", async (req, res) => {
   const videoUrl = req.query.url;
-  if (!videoUrl) return res.status(400).json({ error: "No URL provided" });
-
   try {
-    // gotScraping mimics a real browser to bypass Cloudflare
     const response = await gotScraping({
       url: 'https://tikwm.com/api/',
       searchParams: { url: videoUrl },
       responseType: 'json'
     });
-
     res.json(response.body);
   } catch (error) {
-    console.error("Single Video Error:", error.message);
-    res.status(500).json({ error: "Failed to fetch video details" });
+    res.status(500).json({ error: "API Error" });
   }
 });
 
-// --- API 2: Profile Fetcher (Gets the list of links) ---
+// Profile Endpoint
 app.get("/profile", async (req, res) => {
   const profileUrl = req.query.url;
-  
-  // Extract Username from URL (e.g., https://www.tiktok.com/@username)
   const match = profileUrl.match(/@([a-zA-Z0-9_.-]+)/);
-  if (!match) {
-    return res.status(400).json({ error: "Could not find username in URL" });
-  }
+  
+  if (!match) return res.json({ error: "Invalid username" });
   const unique_id = match[1];
 
-  console.log(`Fetching profile for: ${unique_id}`);
-
   try {
-    // Fetch profile posts using gotScraping to bypass the "Just a Moment" block
     const response = await gotScraping({
       url: 'https://www.tikwm.com/api/user/posts',
-      searchParams: { 
-        unique_id: unique_id, 
-        count: 30 
-      },
+      searchParams: { unique_id, count: 30 },
       responseType: 'json'
     });
 
     const data = response.body.data;
+    if (!data || !data.videos) return res.json({ error: "No videos found", videos: [] });
 
-    if (!data || !data.videos) {
-      return res.json({ error: "Private profile or no videos found", videos: [] });
-    }
-
-    // Extract just the links for your frontend lazy loader
     const videoLinks = data.videos.map(v => 
       `https://www.tiktok.com/@${data.author.unique_id}/video/${v.video_id}`
     );
@@ -74,41 +59,27 @@ app.get("/profile", async (req, res) => {
         username: data.author.unique_id,
         avatar: data.author.avatar,
         followers: data.author.followers || 0,
-        following: data.author.following || 0,
         likes: data.author.heart || 0
       },
       links: videoLinks
     });
-
-  } catch (error) {
-    console.error("Profile Error:", error.message);
-    // If it fails, send a clean error so the frontend doesn't crash
-    res.status(502).json({ error: "Profile lookup blocked by TikTok/Cloudflare" });
+  } catch (e) {
+    res.status(502).json({ error: "Blocked by Cloudflare" });
   }
 });
 
-// --- Download Proxy ---
+// Download Proxy
 app.get("/download", async (req, res) => {
   const videoUrl = req.query.url;
-  const name = req.query.name || "tiktok_video";
-
-  if (!videoUrl) return res.status(400).send("No URL");
-
+  const name = req.query.name || "video";
   try {
-    // Using basic fetch for the video file itself (usually less strict)
-    const { body, headers } = await gotScraping({
-      url: videoUrl,
-      responseType: 'buffer'
-    });
-
+    const response = await gotScraping({ url: videoUrl, responseType: 'buffer' });
     res.setHeader("Content-Disposition", `attachment; filename=${name}.mp4`);
-    res.setHeader("Content-Type", headers['content-type'] || "video/mp4");
-    res.send(body);
-
+    res.setHeader("Content-Type", "video/mp4");
+    res.send(response.body);
   } catch (e) {
-    console.error("Download Error:", e.message);
-    res.status(500).send("Download Failed");
+    res.status(500).send("Download error");
   }
 });
 
-app.listen(PORT, () => console.log("Server running on port " + PORT));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
