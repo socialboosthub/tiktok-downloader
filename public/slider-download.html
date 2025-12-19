@@ -5,115 +5,82 @@
 <title>Slider Downloader</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-body{font-family:system-ui,sans-serif;background:#f4f4f4;margin:0;padding:12px;text-align:center;}
-h3{margin-bottom:10px;}
-.card{background:#fff;max-width:420px;margin:15px auto;padding:15px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,0.08);text-align:left;}
-.thumb{width:100%;height:220px;border-radius:10px;background:linear-gradient(90deg,#eee 25%,#ddd 37%,#eee 63%);background-size:400% 100%;animation:shimmer 1.4s infinite;}
-@keyframes shimmer{0%{background-position:100% 0}100%{background-position:-100% 0}}
-img.slider-thumb{width:100%;border-radius:10px;display:none;margin-top:8px;}
-.user{display:flex;align-items:center;margin-top:10px;}
-.avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;margin-right:8px;background:#ddd;}
-.username{font-weight:600;font-size:14px;}
-.caption{font-size:13px;color:#555;margin-top:4px;}
-.status{font-size:13px;color:#777;margin-top:8px;}
-button{margin-top:12px;padding:12px 20px;border:none;border-radius:8px;background:#000;color:#fff;font-size:15px;width:100%;}
+body{font-family:system-ui;background:#f4f4f4;margin:0;padding:12px}
+.card{background:#fff;max-width:420px;margin:15px auto;padding:15px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+.thumb{height:220px;border-radius:10px;background:#ddd}
+img{width:100%;border-radius:10px;display:none}
+.user{display:flex;align-items:center;margin-top:10px}
+.avatar{width:36px;height:36px;border-radius:50%;margin-right:8px}
+.username{font-weight:600}
+.caption{font-size:13px;color:#555}
+button{margin-top:12px;padding:12px;width:100%;border:none;border-radius:8px;background:#000;color:#fff}
+.status{font-size:13px;color:#777;margin-top:8px}
 </style>
 </head>
 <body>
+
 <h3>Preparing Slider Downloads…</h3>
 <div id="list"></div>
-<script>
-const params=new URLSearchParams(location.search);
-const rawLinks=params.get("links");
-if(!rawLinks){document.body.innerHTML="<h3>No links provided</h3>";throw new Error("No links");}
-const links=rawLinks.split("\n").map(l=>l.trim()).filter(Boolean);
-const list=document.getElementById("list");
 
-// Create cards
-const cards=links.map((_,i)=>{
-  const card=document.createElement("div");
-  card.className="card";
-  card.innerHTML=`
+<script>
+const links = new URLSearchParams(location.search)
+  .get("links")
+  .split("\n")
+  .map(l => l.trim())
+  .filter(Boolean);
+
+const list = document.getElementById("list");
+
+links.forEach(async (link, index) => {
+  const card = document.createElement("div");
+  card.className = "card";
+  card.innerHTML = `
     <div class="thumb"></div>
-    <img class="slider-thumb">
+    <img>
     <div class="user">
       <img class="avatar">
       <div class="username"></div>
     </div>
     <div class="caption"></div>
-    <div class="status">Loading slider ${i+1} of ${links.length}…</div>
+    <div class="status">Loading slider ${index+1}…</div>
   `;
   list.appendChild(card);
-  return card;
-});
 
-// Load sliders
-function loadSlider(index){
-  if(index>=links.length) return;
-  const card=cards[index];
-  const thumb=card.querySelector(".thumb");
-  const sliderImg=card.querySelector(".slider-thumb");
-  const avatar=card.querySelector(".avatar");
-  const usernameEl=card.querySelector(".username");
-  const captionEl=card.querySelector(".caption");
-  const status=card.querySelector(".status");
-  let attempts=0; const MAX_ATTEMPTS=3;
+  const thumb = card.querySelector(".thumb");
+  const img = card.querySelector("img");
+  const avatar = card.querySelector(".avatar");
+  const username = card.querySelector(".username");
+  const caption = card.querySelector(".caption");
+  const status = card.querySelector(".status");
 
-  async function tryLoad(){
-    attempts++;
-    status.textContent=`Loading slider ${index+1} of ${links.length} (attempt ${attempts})…`;
-    try{
-      const res=await fetch(`/slider?url=${encodeURIComponent(links[index])}`);
-      if(!res.ok) throw new Error("API blocked");
-      const json=await res.json();
-      const data=json;
-      const images=data.images;
+  const r = await fetch(`/slider?url=${encodeURIComponent(link)}`);
+  const d = await r.json();
 
-      // Show thumbnail as first image
-      sliderImg.src=images[0];
-      sliderImg.onload=()=>{
-        thumb.remove();
-        sliderImg.style.display="block";
-      };
+  img.src = d.images[0];
+  img.onload = () => { thumb.remove(); img.style.display = "block"; };
 
-      // Set dummy avatar & username (if API provides)
-      avatar.src=data.avatar||"";
-      usernameEl.textContent=data.username||"@unknown";
-      captionEl.textContent=data.caption||"No caption available";
+  avatar.src = d.avatar;
+  username.textContent = "@" + d.username;
+  caption.textContent = d.caption;
 
-      // Download button
-      const btn=document.createElement("button");
-      if(images.length===1){
-        btn.textContent="Download Photo";
-        btn.onclick=()=>{downloadFile(images[0],`${data.name}_1.jpg`);}
-      }else{
-        btn.textContent="Download All Photos";
-        btn.onclick=()=>{images.forEach((img,i)=>downloadFile(img,`${data.name}_${i+1}.jpg`));}
-      }
+  const btn = document.createElement("button");
 
-      card.appendChild(btn);
-      status.textContent="Ready to download";
-      setTimeout(()=>loadSlider(index+1),1200);
-    }catch(e){
-      if(attempts>=MAX_ATTEMPTS){status.textContent="Could not load slider post"; setTimeout(()=>loadSlider(index+1),1200);}
-      else setTimeout(tryLoad,1500);
-    }
+  if (d.images.length === 1) {
+    btn.textContent = "Download Photo";
+    btn.onclick = () =>
+      location.href = `/slider-download?img=${encodeURIComponent(d.images[0])}&name=${d.name}_1.jpg`;
+  } else {
+    btn.textContent = "Download All Photos";
+    btn.onclick = () =>
+      d.images.forEach((u,i) =>
+        location.href = `/slider-download?img=${encodeURIComponent(u)}&name=${d.name}_${i+1}.jpg`
+      );
   }
 
-  tryLoad();
-}
-
-// Helper to trigger download
-function downloadFile(url,name){
-  const a=document.createElement("a");
-  a.href=url;
-  a.download=name;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-}
-
-loadSlider(0);
+  card.appendChild(btn);
+  status.textContent = "Ready";
+});
 </script>
+
 </body>
 </html>
