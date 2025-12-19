@@ -192,13 +192,18 @@ function loadVideo(index) {
       captionEl.textContent =
         data.title || "No caption available";
 
-      // Download button
-      const btn = document.createElement("button");
-      btn.textContent = "Download Video";
-      btn.onclick = () => {
-        location.href =
-          `/download?url=${encodeURIComponent(data.play)}&name=tiktok_${index + 1}`;
-      };
+// Download button
+const btn = document.createElement("button");
+btn.textContent = "Download Video";
+
+const videoId =
+  data.id ||
+  Date.now() + "_" + Math.floor(Math.random() * 1e9);
+
+btn.onclick = () => {
+  location.href =
+    `/download?url=${encodeURIComponent(data.play)}&name=tiktok_${videoId}`;
+};
 
       status.textContent = "Ready to download";
       card.appendChild(btn);
