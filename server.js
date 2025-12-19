@@ -1,14 +1,11 @@
 const express = require("express");
 const fetch = require("node-fetch");
 const path = require("path");
-const archiver = require("archiver");
 
 const app = express();
 
-// Serve static files
 app.use(express.static(path.join(__dirname, "public")));
 
-// Home
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
@@ -17,9 +14,7 @@ app.get("/", (req, res) => {
 app.get("/api", async (req, res) => {
   try {
     const url = req.query.url;
-    const r = await fetch(
-      `https://tikwm.com/api/?url=${encodeURIComponent(url)}`
-    );
+    const r = await fetch(`https://tikwm.com/api/?url=${encodeURIComponent(url)}`);
     const j = await r.json();
     res.json(j);
   } catch {
@@ -27,100 +22,44 @@ app.get("/api", async (req, res) => {
   }
 });
 
-// ================= VIDEO DOWNLOAD =================
-app.get("/download", async (req, res) => {
+// Slider images ONLY
+app.get("/slider", async (req, res) => {
   try {
     const url = req.query.url;
+    const r = await fetch(`https://tikwm.com/api/?url=${encodeURIComponent(url)}`);
+    const j = await r.json();
+    const data = j.data;
 
-    const api = await fetch(
-      `https://tikwm.com/api/?url=${encodeURIComponent(url)}`
-    );
-    const j = await api.json();
-
-    if (j?.data?.images) {
-      return res.status(400).send("This is a slider post");
+    if (!data?.images || data.images.length === 0) {
+      return res.status(400).json({ error: "Not a slider post" });
     }
 
-    if (j?.data?.is_story) {
-      return res.status(400).send("This is a story");
-    }
+    res.json({
+      author: data.author,
+      caption: data.title,
+      images: data.images
+    });
 
-    const play = j.data.play || j.data.wmplay;
-    const name = j.data.author?.unique_id || "tiktok_video";
-
-    const r = await fetch(play);
-
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="${name}.mp4"`
-    );
-    res.setHeader("Content-Type", "video/mp4");
-
-    r.body.pipe(res);
   } catch {
-    res.status(500).send("Video download failed");
+    res.status(500).json({ error: "Slider fetch failed" });
   }
 });
 
-// ================= STORY DOWNLOAD =================
-app.get("/story", async (req, res) => {
+// Force image download
+app.get("/image", async (req, res) => {
   try {
     const url = req.query.url;
+    const name = req.query.name || "tiktok_photo";
 
-    const api = await fetch(
-      `https://tikwm.com/api/?url=${encodeURIComponent(url)}`
-    );
-    const j = await api.json();
-
-    if (!j?.data?.is_story) {
-      return res.status(400).send("Not a story");
-    }
-
-    const play = j.data.play || j.data.wmplay;
-    const name = j.data.author?.unique_id || "tiktok_story";
-
-    const r = await fetch(play);
-
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="${name}.mp4"`
-    );
-    res.setHeader("Content-Type", "video/mp4");
-
+    const r = await fetch(url);
+    res.setHeader("Content-Disposition", `attachment; filename="${name}.jpg"`);
+    res.setHeader("Content-Type", "image/jpeg");
     r.body.pipe(res);
+
   } catch {
-    res.status(500).send("Story download failed");
+    res.status(500).send("Image download failed");
   }
 });
 
-// ================= SLIDER ZIP DOWNLOAD =================
-app.get("/slider-zip", async (req, res) => {
-  try {
-    const images = JSON.parse(req.query.images);
-    const name = req.query.name || "tiktok_slider";
-
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="${name}.zip"`
-    );
-    res.setHeader("Content-Type", "application/zip");
-
-    const archive = archiver("zip");
-    archive.pipe(res);
-
-    for (let i = 0; i < images.length; i++) {
-      const r = await fetch(images[i]);
-      archive.append(r.body, { name: `${name}_${i + 1}.jpg` });
-    }
-
-    archive.finalize();
-  } catch {
-    res.status(500).send("Slider download failed");
-  }
-});
-
-// Start server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () =>
-  console.log("Server running on port " + PORT)
-);
+app.listen(PORT, () => console.log("Server running on " + PORT));
