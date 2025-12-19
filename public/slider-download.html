@@ -1,85 +1,65 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>Slider Downloader</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-body{font-family:system-ui;background:#f4f4f4;margin:0;padding:12px}
-.card{background:#fff;max-width:420px;margin:15px auto;padding:15px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
-.thumb{height:220px;border-radius:10px;background:#ddd}
-img{width:100%;border-radius:10px;display:none}
-.user{display:flex;align-items:center;margin-top:10px}
-.avatar{width:36px;height:36px;border-radius:50%;margin-right:8px}
-.username{font-weight:600}
-.caption{font-size:13px;color:#555}
-button{margin-top:12px;padding:12px;width:100%;border:none;border-radius:8px;background:#000;color:#fff}
-.status{font-size:13px;color:#777;margin-top:8px}
-</style>
+  <meta charset="UTF-8" />
+  <title>Slider Downloader</title>
+  <style>
+    body { font-family: Arial; text-align: center; }
+    img { max-width: 100%; border-radius: 12px; }
+    .avatar { width: 80px; border-radius: 50%; }
+    button { padding: 12px 20px; font-size: 16px; }
+  </style>
 </head>
 <body>
 
-<h3>Preparing Slider Downloads…</h3>
-<div id="list"></div>
+<h2>📸 TikTok Slider Downloader</h2>
+
+<input id="url" placeholder="Paste TikTok link" style="width:90%" />
+<br><br>
+<button onclick="load()">Fetch</button>
+
+<div id="result"></div>
 
 <script>
-const links = new URLSearchParams(location.search)
-  .get("links")
-  .split("\n")
-  .map(l => l.trim())
-  .filter(Boolean);
+async function load() {
+  const url = document.getElementById("url").value;
+  const res = await fetch(`/api?url=${encodeURIComponent(url)}`);
+  const j = await res.json();
 
-const list = document.getElementById("list");
-
-links.forEach(async (link, index) => {
-  const card = document.createElement("div");
-  card.className = "card";
-  card.innerHTML = `
-    <div class="thumb"></div>
-    <img>
-    <div class="user">
-      <img class="avatar">
-      <div class="username"></div>
-    </div>
-    <div class="caption"></div>
-    <div class="status">Loading slider ${index+1}…</div>
-  `;
-  list.appendChild(card);
-
-  const thumb = card.querySelector(".thumb");
-  const img = card.querySelector("img");
-  const avatar = card.querySelector(".avatar");
-  const username = card.querySelector(".username");
-  const caption = card.querySelector(".caption");
-  const status = card.querySelector(".status");
-
-  const r = await fetch(`/slider?url=${encodeURIComponent(link)}`);
-  const d = await r.json();
-
-  img.src = d.images[0];
-  img.onload = () => { thumb.remove(); img.style.display = "block"; };
-
-  avatar.src = d.avatar;
-  username.textContent = "@" + d.username;
-  caption.textContent = d.caption;
-
-  const btn = document.createElement("button");
-
-  if (d.images.length === 1) {
-    btn.textContent = "Download Photo";
-    btn.onclick = () =>
-      location.href = `/slider-download?img=${encodeURIComponent(d.images[0])}&name=${d.name}_1.jpg`;
-  } else {
-    btn.textContent = "Download All Photos";
-    btn.onclick = () =>
-      d.images.forEach((u,i) =>
-        location.href = `/slider-download?img=${encodeURIComponent(u)}&name=${d.name}_${i+1}.jpg`
-      );
+  const d = j.data;
+  if (!d.images) {
+    alert("Not a slider post");
+    return;
   }
 
-  card.appendChild(btn);
-  status.textContent = "Ready";
-});
+  const avatar = d.author?.avatar || "/default-avatar.png";
+  const name = d.author?.unique_id || "unknown";
+
+  const btnText =
+    d.images.length === 1
+      ? "Download Photo"
+      : "Download All Photos";
+
+  document.getElementById("result").innerHTML = `
+    <img class="avatar" src="${avatar}">
+    <p>@${name}</p>
+    <img src="${d.images[0]}">
+    <br><br>
+    <button onclick="download()"> ${btnText} </button>
+  `;
+
+  window.download = () => {
+    if (d.images.length === 1) {
+      location.href =
+        d.images[0];
+    } else {
+      location.href =
+        \`/slider-zip?images=\${encodeURIComponent(
+          JSON.stringify(d.images)
+        )}&name=\${name}\`;
+    }
+  };
+}
 </script>
 
 </body>
