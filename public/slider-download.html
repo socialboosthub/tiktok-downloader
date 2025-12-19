@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Slider Downloader</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+/* reuse same styles as video page */
+body{font-family:system-ui,sans-serif;background:#f4f4f4;margin:0;padding:12px;text-align:center;}
+h3{margin-bottom:10px;}
+.card{background:#fff;max-width:420px;margin:15px auto;padding:15px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,0.08);text-align:left;}
+.thumb{width:100%;height:220px;border-radius:10px;background:linear-gradient(90deg,#eee 25%,#ddd 37%,#eee 63%);background-size:400% 100%;animation:shimmer 1.4s infinite;}
+@keyframes shimmer{0%{background-position:100% 0}100%{background-position:-100% 0}}
+img.video-thumb{width:100%;border-radius:10px;display:none;margin-top:8px;}
+.user{display:flex;align-items:center;margin-top:10px;}
+.avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;margin-right:8px;background:#ddd;}
+.username{font-weight:600;font-size:14px;}
+.caption{font-size:13px;color:#555;margin-top:4px;}
+.status{font-size:13px;color:#777;margin-top:8px;}
+button{margin-top:12px;padding:12px 20px;border:none;border-radius:8px;background:#000;color:#fff;font-size:15px;width:100%;}
+</style>
+</head>
+<body data-type="slider">
+<h3>Preparing Slider Downloads…</h3>
+<div id="list"></div>
+<script>
+const params=new URLSearchParams(location.search);
+const rawLinks=params.get("links");
+if(!rawLinks){document.body.innerHTML="<h3>No links provided</h3>"; throw new Error("No links");}
+const links=rawLinks.split("\n").map(l=>l.trim()).filter(Boolean);
+const list=document.getElementById("list");
+const cards=links.map((_,i)=>{const card=document.createElement("div"); card.className="card"; card.innerHTML=`<div class="thumb"></div><div class="user"><img class="avatar"><div class="username"></div></div><div class="caption"></div><div class="status">Loading slider ${i+1} of ${links.length}…</div>`; list.appendChild(card); return card;});
+
+function loadSlider(index){
+  if(index>=links.length) return;
+  const card=cards[index];
+  const thumb=card.querySelector(".thumb");
+  const status=card.querySelector(".status");
+  const captionEl=card.querySelector(".caption");
+  const avatar=card.querySelector(".avatar");
+  const usernameEl=card.querySelector(".username");
+  let attempts=0; const MAX_ATTEMPTS=3;
+
+  async function tryLoad(){
+    attempts++;
+    status.textContent=`Loading slider ${index+1} of ${links.length} (attempt ${attempts})…`;
+    try{
+      const res=await fetch(`/slider?url=${encodeURIComponent(links[index])}`);
+      if(!res.ok) throw new Error("API blocked");
+      const json=await res.json();
+      const images=json.images;
+      thumb.remove();
+
+      // display all images
+      images.forEach((imgUrl,i)=>{
+        const img=document.createElement("img");
+        img.src=imgUrl;
+        img.style.width="100%";
+        img.style.marginTop="8px";
+        img.className="video-thumb";
+        card.appendChild(img);
+      });
+
+      // download all images
+      const btn=document.createElement("button");
+      btn.textContent="Download All Images";
+      btn.onclick=()=>{
+        images.forEach((imgUrl,i)=>{
+          const a=document.createElement("a");
+          a.href=imgUrl;
+          a.download=`${json.name}_${i+1}.jpg`;
+          a.click();
+        });
+      };
+      card.appendChild(btn);
+
+      status.textContent="Ready to download";
+      setTimeout(()=>loadSlider(index+1),1200);
+    }catch(e){
+      if(attempts>=MAX_ATTEMPTS){status.textContent="Could not load slider post"; setTimeout(()=>loadSlider(index+1),1200);}
+      else setTimeout(tryLoad,1500);
+    }
+  }
+
+  tryLoad();
+}
+loadSlider(0);
+</script>
+</body>
+</html>
