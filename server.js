@@ -1,6 +1,7 @@
 const express = require("express");
 const fetch = require("node-fetch");
 const path = require("path");
+const archiver = require("archiver");
 
 const app = express();
 
@@ -12,7 +13,7 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
-// TikWM API proxy
+// TikWM proxy
 app.get("/api", async (req, res) => {
   try {
     const url = req.query.url;
@@ -30,20 +31,24 @@ app.get("/api", async (req, res) => {
 app.get("/download", async (req, res) => {
   try {
     const url = req.query.url;
-    const name = req.query.name || `tiktok_${Date.now()}`;
 
-    const r = await fetch(
+    const api = await fetch(
       `https://tikwm.com/api/?url=${encodeURIComponent(url)}`
     );
-    const j = await r.json();
+    const j = await api.json();
 
-    const isStory = j?.data?.itemType === "story" || j?.data?.is_story;
-    if (isStory) {
-      return res.status(400).send("This is a story. Use story downloader.");
+    if (j?.data?.images) {
+      return res.status(400).send("This is a slider post");
     }
 
-    const play = j?.data?.play || j?.data?.wmplay;
-    const video = await fetch(play);
+    if (j?.data?.is_story) {
+      return res.status(400).send("This is a story");
+    }
+
+    const play = j.data.play || j.data.wmplay;
+    const name = j.data.author?.unique_id || "tiktok_video";
+
+    const r = await fetch(play);
 
     res.setHeader(
       "Content-Disposition",
@@ -51,7 +56,7 @@ app.get("/download", async (req, res) => {
     );
     res.setHeader("Content-Type", "video/mp4");
 
-    video.body.pipe(res);
+    r.body.pipe(res);
   } catch {
     res.status(500).send("Video download failed");
   }
@@ -61,20 +66,20 @@ app.get("/download", async (req, res) => {
 app.get("/story", async (req, res) => {
   try {
     const url = req.query.url;
-    const name = req.query.name || `story_${Date.now()}`;
 
-    const r = await fetch(
+    const api = await fetch(
       `https://tikwm.com/api/?url=${encodeURIComponent(url)}`
     );
-    const j = await r.json();
+    const j = await api.json();
 
-    const isStory = j?.data?.itemType === "story" || j?.data?.is_story;
-    if (!isStory) {
+    if (!j?.data?.is_story) {
       return res.status(400).send("Not a story");
     }
 
-    const play = j?.data?.play || j?.data?.wmplay;
-    const video = await fetch(play);
+    const play = j.data.play || j.data.wmplay;
+    const name = j.data.author?.unique_id || "tiktok_story";
+
+    const r = await fetch(play);
 
     res.setHeader(
       "Content-Disposition",
@@ -82,56 +87,35 @@ app.get("/story", async (req, res) => {
     );
     res.setHeader("Content-Type", "video/mp4");
 
-    video.body.pipe(res);
+    r.body.pipe(res);
   } catch {
     res.status(500).send("Story download failed");
   }
 });
 
-// ================= SLIDER INFO =================
-app.get("/slider", async (req, res) => {
+// ================= SLIDER ZIP DOWNLOAD =================
+app.get("/slider-zip", async (req, res) => {
   try {
-    const url = req.query.url;
-
-    const r = await fetch(
-      `https://tikwm.com/api/?url=${encodeURIComponent(url)}`
-    );
-    const j = await r.json();
-    const d = j.data;
-
-    if (!Array.isArray(d?.images) || d.images.length === 0) {
-      return res.status(400).send("Not a slider post");
-    }
-
-    res.json({
-      images: d.images,
-      username: d.author?.unique_id || d.author?.nickname || "unknown",
-      avatar: d.author?.avatar || d.author?.avatar_thumb || "",
-      caption: d.title || "No caption available",
-      name: `slider_${d.id || Date.now()}`
-    });
-  } catch {
-    res.status(500).send("Slider fetch failed");
-  }
-});
-
-// ================= SLIDER IMAGE DOWNLOAD (MOBILE SAFE) =================
-app.get("/slider-download", async (req, res) => {
-  try {
-    const img = req.query.img;
-    const name = req.query.name || `photo_${Date.now()}.jpg`;
-
-    const r = await fetch(img);
+    const images = JSON.parse(req.query.images);
+    const name = req.query.name || "tiktok_slider";
 
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename="${name}"`
+      `attachment; filename="${name}.zip"`
     );
-    res.setHeader("Content-Type", "image/jpeg");
+    res.setHeader("Content-Type", "application/zip");
 
-    r.body.pipe(res);
+    const archive = archiver("zip");
+    archive.pipe(res);
+
+    for (let i = 0; i < images.length; i++) {
+      const r = await fetch(images[i]);
+      archive.append(r.body, { name: `${name}_${i + 1}.jpg` });
+    }
+
+    archive.finalize();
   } catch {
-    res.status(500).send("Image download failed");
+    res.status(500).send("Slider download failed");
   }
 });
 
