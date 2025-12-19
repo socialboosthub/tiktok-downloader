@@ -26,32 +26,30 @@ app.get("/api", async (req, res) => {
   }
 });
 
-// VIDEO DOWNLOAD (only videos allowed)
+// VIDEO DOWNLOAD (videos only)
 app.get("/download", async (req, res) => {
   try {
-    const videoUrl = req.query.url;
-    const fileName = req.query.name || "tiktok_video";
+    const tiktokUrl = req.query.url; // TikTok page URL
+    const fileName = req.query.name || `tiktok_video_${Date.now()}`;
 
-    // Check type via TikWM API
+    // Fetch TikWM API to get actual video info
     const apiRes = await fetch(
-      `https://tikwm.com/api/?url=${encodeURIComponent(videoUrl)}`
+      `https://tikwm.com/api/?url=${encodeURIComponent(tiktokUrl)}`
     );
     const apiJson = await apiRes.json();
+    const data = apiJson?.data;
 
-    const isStory = apiJson?.data?.itemType === "story" || apiJson?.data?.is_story;
-    if (isStory) {
-      return res.status(400).send("This is a story link. Use the Story Downloader.");
-    }
+    // Check if it's a story
+    const isStory = data?.itemType === "story" || data?.is_story;
+    if (isStory) return res.status(400).send("This is a story link. Use Story Downloader page.");
 
     // Get actual video URL
-    const playUrl = apiJson?.data?.play || apiJson?.data?.wmplay || videoUrl;
+    const playUrl = data?.play || data?.wmplay;
+    if (!playUrl) return res.status(404).send("Video not found");
 
     const response = await fetch(playUrl);
 
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="${fileName}.mp4"`
-    );
+    res.setHeader("Content-Disposition", `attachment; filename="${fileName}.mp4"`);
     res.setHeader("Content-Type", "video/mp4");
 
     response.body.pipe(res);
@@ -60,34 +58,28 @@ app.get("/download", async (req, res) => {
   }
 });
 
-// STORY DOWNLOAD (only stories allowed)
+// STORY DOWNLOAD (stories only)
 app.get("/story", async (req, res) => {
   try {
-    const storyUrl = req.query.url;
-    const fileName = req.query.name || "tiktok_story";
+    const tiktokUrl = req.query.url; // TikTok page URL
+    const fileName = req.query.name || `tiktok_story_${Date.now()}`;
 
-    // Check type via TikWM API
+    // Fetch TikWM API to get actual story info
     const apiRes = await fetch(
-      `https://tikwm.com/api/?url=${encodeURIComponent(storyUrl)}`
+      `https://tikwm.com/api/?url=${encodeURIComponent(tiktokUrl)}`
     );
     const apiJson = await apiRes.json();
+    const data = apiJson?.data;
 
-    const isStory = apiJson?.data?.itemType === "story" || apiJson?.data?.is_story;
-    if (!isStory) {
-      return res.status(400).send("This is not a story link.");
-    }
+    const isStory = data?.itemType === "story" || data?.is_story;
+    if (!isStory) return res.status(400).send("This is not a story link.");
 
-    const storyVideo = apiJson?.data?.play || apiJson?.data?.wmplay;
-    if (!storyVideo) {
-      return res.status(404).send("Story not found or expired");
-    }
+    const playUrl = data?.play || data?.wmplay;
+    if (!playUrl) return res.status(404).send("Story not found or expired");
 
-    const response = await fetch(storyVideo);
+    const response = await fetch(playUrl);
 
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="${fileName}.mp4"`
-    );
+    res.setHeader("Content-Disposition", `attachment; filename="${fileName}.mp4"`);
     res.setHeader("Content-Type", "video/mp4");
 
     response.body.pipe(res);
