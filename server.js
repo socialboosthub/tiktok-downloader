@@ -1,6 +1,7 @@
 const express = require("express");
 const fetch = require("node-fetch");
 const path = require("path");
+
 const app = express();
 
 // SERVE STATIC FILES
@@ -11,6 +12,7 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
+// TikTok API proxy
 app.get("/api", async (req, res) => {
   const url = req.query.url;
   const r = await fetch(
@@ -20,21 +22,27 @@ app.get("/api", async (req, res) => {
   res.json(j);
 });
 
+// Download route
 app.get("/download", async (req, res) => {
-  const videoUrl = req.query.url;
-  const response = await fetch(videoUrl);
+  try {
+    const videoUrl = req.query.url;
 
-  // 🔴 CHANGED PART (ONLY THIS)
-  const uniqueName =
-    "tiktok_" + Date.now() + "_" + Math.floor(Math.random() * 1e9);
+    // 🔑 Extract TikTok video ID (stable name)
+    const videoId =
+      videoUrl.match(/\/video\/(\d+)/)?.[1] || "unknown";
 
-  res.setHeader(
-    "Content-Disposition",
-    `attachment; filename="${uniqueName}.mp4"`
-  );
-  res.setHeader("Content-Type", "video/mp4");
+    const response = await fetch(videoUrl);
 
-  response.body.pipe(res);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="tiktok_${videoId}.mp4"`
+    );
+    res.setHeader("Content-Type", "video/mp4");
+
+    response.body.pipe(res);
+  } catch (err) {
+    res.status(500).send("Download failed");
+  }
 });
 
 const PORT = process.env.PORT || 3000;
