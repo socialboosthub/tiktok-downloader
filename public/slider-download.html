@@ -1,65 +1,173 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Slider Downloader</title>
-  <style>
-    body { font-family: Arial; text-align: center; }
-    img { max-width: 100%; border-radius: 12px; }
-    .avatar { width: 80px; border-radius: 50%; }
-    button { padding: 12px 20px; font-size: 16px; }
-  </style>
+<meta charset="UTF-8">
+<title>Preparing Slider Download</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body {
+  font-family: system-ui, sans-serif;
+  background: #f4f4f4;
+  padding: 12px;
+  text-align: center;
+}
+
+.card {
+  background: #fff;
+  max-width: 420px;
+  margin: 20px auto;
+  padding: 15px;
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.08);
+  text-align: left;
+}
+
+.thumb {
+  width: 100%;
+  height: 240px;
+  border-radius: 12px;
+  background: #ddd;
+  object-fit: cover;
+}
+
+.user {
+  display: flex;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 10px;
+  background: #ddd;
+}
+
+.username {
+  font-weight: 600;
+}
+
+.caption {
+  font-size: 13px;
+  color: #555;
+  margin-top: 6px;
+}
+
+.status {
+  font-size: 13px;
+  color: #777;
+  margin-top: 10px;
+}
+
+button {
+  margin-top: 14px;
+  padding: 14px;
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  background: #000;
+  color: #fff;
+  font-size: 15px;
+}
+</style>
 </head>
+
 <body>
 
-<h2>📸 TikTok Slider Downloader</h2>
-
-<input id="url" placeholder="Paste TikTok link" style="width:90%" />
-<br><br>
-<button onclick="load()">Fetch</button>
-
-<div id="result"></div>
+<h3>Preparing Download…</h3>
+<div id="list"></div>
 
 <script>
-async function load() {
-  const url = document.getElementById("url").value;
-  const res = await fetch(`/api?url=${encodeURIComponent(url)}`);
-  const j = await res.json();
+const params = new URLSearchParams(location.search);
+const rawLinks = params.get("links");
 
-  const d = j.data;
-  if (!d.images) {
-    alert("Not a slider post");
-    return;
-  }
-
-  const avatar = d.author?.avatar || "/default-avatar.png";
-  const name = d.author?.unique_id || "unknown";
-
-  const btnText =
-    d.images.length === 1
-      ? "Download Photo"
-      : "Download All Photos";
-
-  document.getElementById("result").innerHTML = `
-    <img class="avatar" src="${avatar}">
-    <p>@${name}</p>
-    <img src="${d.images[0]}">
-    <br><br>
-    <button onclick="download()"> ${btnText} </button>
-  `;
-
-  window.download = () => {
-    if (d.images.length === 1) {
-      location.href =
-        d.images[0];
-    } else {
-      location.href =
-        \`/slider-zip?images=\${encodeURIComponent(
-          JSON.stringify(d.images)
-        )}&name=\${name}\`;
-    }
-  };
+if (!rawLinks) {
+  document.body.innerHTML = "<h3>No links provided</h3>";
+  throw new Error("No links");
 }
+
+const links = rawLinks.split("\n").map(l => l.trim()).filter(Boolean);
+const list = document.getElementById("list");
+
+links.forEach(async (link, index) => {
+
+  const card = document.createElement("div");
+  card.className = "card";
+  card.innerHTML = `
+    <img class="thumb">
+    <div class="user">
+      <img class="avatar">
+      <div class="username">Loading…</div>
+    </div>
+    <div class="caption"></div>
+    <div class="status">Fetching slider ${index + 1}…</div>
+  `;
+  list.appendChild(card);
+
+  const thumb = card.querySelector(".thumb");
+  const avatar = card.querySelector(".avatar");
+  const usernameEl = card.querySelector(".username");
+  const captionEl = card.querySelector(".caption");
+  const status = card.querySelector(".status");
+
+  try {
+    const res = await fetch(`/slider?url=${encodeURIComponent(link)}`);
+    const json = await res.json();
+
+    if (!json.images || json.images.length === 0) {
+      status.textContent = "Not a slider post";
+      return;
+    }
+
+    // Thumbnail
+    thumb.src = json.images[0];
+
+    // Profile
+    avatar.src =
+      json.author?.avatar ||
+      json.author?.avatar_thumb ||
+      "";
+
+    usernameEl.textContent =
+      "@" +
+      (json.author?.unique_id ||
+       json.author?.nickname ||
+       "unknown");
+
+    captionEl.textContent = json.caption || "No caption";
+
+    const btn = document.createElement("button");
+    btn.textContent =
+      json.images.length === 1
+        ? "Download Photo"
+        : "Download All Photos";
+
+    btn.onclick = async () => {
+      status.textContent = "Downloading…";
+
+      for (let i = 0; i < json.images.length; i++) {
+        const a = document.createElement("a");
+        a.href =
+          `/image?url=${encodeURIComponent(json.images[i])}&name=photo_${i + 1}`;
+        a.download = "";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        await new Promise(r => setTimeout(r, 900));
+      }
+
+      status.textContent = "Download started";
+    };
+
+    card.appendChild(btn);
+    status.textContent = "Ready";
+
+  } catch {
+    status.textContent = "Failed to load slider";
+  }
+});
 </script>
 
 </body>
