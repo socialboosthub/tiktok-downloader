@@ -7,7 +7,7 @@ const app = express();
 // SERVE STATIC FILES
 app.use(express.static(path.join(__dirname, "public")));
 
-// Home route (extra safety)
+// Home route
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
@@ -22,20 +22,19 @@ app.get("/api", async (req, res) => {
   res.json(j);
 });
 
-// Download route
+// DOWNLOAD ROUTE (FINAL & CORRECT)
 app.get("/download", async (req, res) => {
   try {
     const videoUrl = req.query.url;
 
-    // 🔑 Extract TikTok video ID (stable name)
-    const videoId =
-      videoUrl.match(/\/video\/(\d+)/)?.[1] || "unknown";
+    // 👇 filename comes from frontend (TikTok video ID)
+    const fileName = req.query.name || "tiktok_video";
 
     const response = await fetch(videoUrl);
 
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename="tiktok_${videoId}.mp4"`
+      `attachment; filename="${fileName}.mp4"`
     );
     res.setHeader("Content-Type", "video/mp4");
 
