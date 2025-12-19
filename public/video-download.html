@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Preparing Downloads</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 12px;
+      text-align: center;
+    }
+
+    h3 {
+      margin-bottom: 10px;
+    }
+
+    .card {
+      background: #fff;
+      max-width: 420px;
+      margin: 15px auto;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+      text-align: left;
+    }
+
+    .thumb {
+      width: 100%;
+      height: 220px;
+      border-radius: 10px;
+      background: linear-gradient(
+        90deg,
+        #eee 25%,
+        #ddd 37%,
+        #eee 63%
+      );
+      background-size: 400% 100%;
+      animation: shimmer 1.4s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 100% 0 }
+      100% { background-position: -100% 0 }
+    }
+
+    img.video-thumb {
+      width: 100%;
+      border-radius: 10px;
+      display: none;
+      margin-top: 8px;
+    }
+
+    .user {
+      display: flex;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 8px;
+      background: #ddd;
+    }
+
+    .username {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .caption {
+      font-size: 13px;
+      color: #555;
+      margin-top: 4px;
+    }
+
+    .status {
+      font-size: 13px;
+      color: #777;
+      margin-top: 8px;
+    }
+
+    button {
+      margin-top: 12px;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      background: #000;
+      color: #fff;
+      font-size: 15px;
+      width: 100%;
+    }
+  </style>
+</head>
+
+<body>
+
+<h3>Preparing Downloads…</h3>
+<div id="list"></div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const rawLinks = params.get("links");
+
+if (!rawLinks) {
+  document.body.innerHTML = "<h3>No links provided</h3>";
+  throw new Error("No links");
+}
+
+const links = rawLinks
+  .split("\n")
+  .map(l => l.trim())
+  .filter(Boolean);
+
+const list = document.getElementById("list");
+
+/* STEP 1: CREATE ALL CARDS */
+const cards = links.map((_, i) => {
+  const card = document.createElement("div");
+  card.className = "card";
+
+  card.innerHTML = `
+    <div class="thumb"></div>
+    <img class="video-thumb">
+    <div class="user">
+      <img class="avatar">
+      <div class="username"></div>
+    </div>
+    <div class="caption"></div>
+    <div class="status">Loading video ${i + 1} of ${links.length}…</div>
+  `;
+
+  list.appendChild(card);
+  return card;
+});
+
+/* STEP 2: LOAD VIDEOS ONE BY ONE */
+function loadVideo(index) {
+  if (index >= links.length) return;
+
+  const card = cards[index];
+  const thumb = card.querySelector(".thumb");
+  const videoImg = card.querySelector(".video-thumb");
+  const avatar = card.querySelector(".avatar");
+  const usernameEl = card.querySelector(".username");
+  const captionEl = card.querySelector(".caption");
+  const status = card.querySelector(".status");
+
+  let attempts = 0;
+  const MAX_ATTEMPTS = 3;
+
+  async function tryLoad() {
+    attempts++;
+    status.textContent =
+      `Loading video ${index + 1} of ${links.length} (attempt ${attempts})…`;
+
+    try {
+      const res = await fetch(
+        `/api?url=${encodeURIComponent(links[index])}`
+      );
+
+      if (!res.ok) throw new Error("API blocked");
+
+      const json = await res.json();
+      const data = json.data;
+
+      // Thumbnail
+      videoImg.src = data.origin_cover || data.cover;
+      videoImg.onload = () => {
+        thumb.remove();
+        videoImg.style.display = "block";
+      };
+
+      // Profile picture
+      avatar.src =
+        data.author?.avatar || data.author?.avatar_thumb || "";
+
+      // Username
+      const username =
+        data.author?.unique_id ||
+        data.author?.nickname ||
+        "Unknown user";
+      usernameEl.textContent = "@" + username;
+
+      // Caption
+      captionEl.textContent =
+        data.title || "No caption available";
+
+      // Download button
+      const btn = document.createElement("button");
+      btn.textContent = "Download Video";
+      btn.onclick = () => {
+        location.href =
+          `/download?url=${encodeURIComponent(data.play)}&name=tiktok_${index + 1}`;
+      };
+
+      status.textContent = "Ready to download";
+      card.appendChild(btn);
+
+      setTimeout(() => loadVideo(index + 1), 1200);
+      return;
+
+    } catch (e) {
+      if (attempts >= MAX_ATTEMPTS) {
+        status.textContent =
+          "Could not connect to TikTok server";
+        setTimeout(() => loadVideo(index + 1), 1200);
+      } else {
+        setTimeout(tryLoad, 1500);
+      }
+    }
+  }
+
+  tryLoad();
+}
+
+/* START */
+loadVideo(0);
+</script>
+
+</body>
+</html>
