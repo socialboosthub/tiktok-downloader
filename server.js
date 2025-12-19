@@ -9,83 +9,93 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // Home route
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
+res.sendFile(path.join(__dirname, "index.html"));
 });
 
 // TikTok API proxy
 app.get("/api", async (req, res) => {
-  try {
-    const url = req.query.url;
-    const r = await fetch(
-      `https://tikwm.com/api/?url=${encodeURIComponent(url)}`
-    );
-    const j = await r.json();
-    res.json(j);
-  } catch (e) {
-    res.status(500).json({ error: "API failed" });
-  }
+try {
+const url = req.query.url;
+const r = await fetch(
+https://tikwm.com/api/?url=${encodeURIComponent(url)}
+);
+const j = await r.json();
+res.json(j);
+} catch (e) {
+res.status(500).json({ error: "API failed" });
+}
 });
 
-// VIDEO DOWNLOAD (videos only)
+// VIDEO DOWNLOAD (only videos allowed)
 app.get("/download", async (req, res) => {
-  try {
-    const tiktokUrl = req.query.url; // TikTok page URL
-    const fileName = req.query.name || `tiktok_video_${Date.now()}`;
+try {
+const videoUrl = req.query.url;
+const fileName = req.query.name || "tiktok_video";
 
-    // Fetch TikWM API to get actual video info
-    const apiRes = await fetch(
-      `https://tikwm.com/api/?url=${encodeURIComponent(tiktokUrl)}`
-    );
-    const apiJson = await apiRes.json();
-    const data = apiJson?.data;
+// Check type via TikWM API  
+const apiRes = await fetch(  
+  `https://tikwm.com/api/?url=${encodeURIComponent(videoUrl)}`  
+);  
+const apiJson = await apiRes.json();  
 
-    // Check if it's a story
-    const isStory = data?.itemType === "story" || data?.is_story;
-    if (isStory) return res.status(400).send("This is a story link. Use Story Downloader page.");
+const isStory = apiJson?.data?.itemType === "story" || apiJson?.data?.is_story;  
+if (isStory) {  
+  return res.status(400).send("This is a story link. Use the Story Downloader.");  
+}  
 
-    // Get actual video URL
-    const playUrl = data?.play || data?.wmplay;
-    if (!playUrl) return res.status(404).send("Video not found");
+// Get actual video URL  
+const playUrl = apiJson?.data?.play || apiJson?.data?.wmplay || videoUrl;  
 
-    const response = await fetch(playUrl);
+const response = await fetch(playUrl);  
 
-    res.setHeader("Content-Disposition", `attachment; filename="${fileName}.mp4"`);
-    res.setHeader("Content-Type", "video/mp4");
+res.setHeader(  
+  "Content-Disposition",  
+  `attachment; filename="${fileName}.mp4"`  
+);  
+res.setHeader("Content-Type", "video/mp4");  
 
-    response.body.pipe(res);
-  } catch (err) {
-    res.status(500).send("Video download failed");
-  }
+response.body.pipe(res);
+
+} catch (err) {
+res.status(500).send("Video download failed");
+}
 });
 
-// STORY DOWNLOAD (stories only)
+// STORY DOWNLOAD (only stories allowed)
 app.get("/story", async (req, res) => {
-  try {
-    const tiktokUrl = req.query.url; // TikTok page URL
-    const fileName = req.query.name || `tiktok_story_${Date.now()}`;
+try {
+const storyUrl = req.query.url;
+const fileName = req.query.name || "tiktok_story";
 
-    // Fetch TikWM API to get actual story info
-    const apiRes = await fetch(
-      `https://tikwm.com/api/?url=${encodeURIComponent(tiktokUrl)}`
-    );
-    const apiJson = await apiRes.json();
-    const data = apiJson?.data;
+// Check type via TikWM API  
+const apiRes = await fetch(  
+  `https://tikwm.com/api/?url=${encodeURIComponent(storyUrl)}`  
+);  
+const apiJson = await apiRes.json();  
 
-    const isStory = data?.itemType === "story" || data?.is_story;
-    if (!isStory) return res.status(400).send("This is not a story link.");
+const isStory = apiJson?.data?.itemType === "story" || apiJson?.data?.is_story;  
+if (!isStory) {  
+  return res.status(400).send("This is not a story link.");  
+}  
 
-    const playUrl = data?.play || data?.wmplay;
-    if (!playUrl) return res.status(404).send("Story not found or expired");
+const storyVideo = apiJson?.data?.play || apiJson?.data?.wmplay;  
+if (!storyVideo) {  
+  return res.status(404).send("Story not found or expired");  
+}  
 
-    const response = await fetch(playUrl);
+const response = await fetch(storyVideo);  
 
-    res.setHeader("Content-Disposition", `attachment; filename="${fileName}.mp4"`);
-    res.setHeader("Content-Type", "video/mp4");
+res.setHeader(  
+  "Content-Disposition",  
+  `attachment; filename="${fileName}.mp4"`  
+);  
+res.setHeader("Content-Type", "video/mp4");  
 
-    response.body.pipe(res);
-  } catch (err) {
-    res.status(500).send("Story download failed");
-  }
+response.body.pipe(res);
+
+} catch (err) {
+res.status(500).send("Story download failed");
+}
 });
 
 // Start server
