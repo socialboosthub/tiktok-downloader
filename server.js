@@ -4,158 +4,133 @@ const path = require("path");
 
 const app = express();
 
-/* =======================
-   STATIC FILES
-======================= */
+// Serve static files
 app.use(express.static(path.join(__dirname, "public")));
 
+// Home route
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
-/* =======================
-   API PROXY (ALL TYPES)
-======================= */
+// TikTok API proxy
 app.get("/api", async (req, res) => {
   try {
     const url = req.query.url;
-    if (!url) return res.status(400).json({ error: "No URL" });
-
-    const r = await fetch(
-      `https://tikwm.com/api/?url=${encodeURIComponent(url)}`
-    );
+    const r = await fetch(`https://tikwm.com/api/?url=${encodeURIComponent(url)}`);
     const j = await r.json();
-
     res.json(j);
-  } catch {
+  } catch (e) {
     res.status(500).json({ error: "API failed" });
   }
 });
 
-/* =======================
-   VIDEO DOWNLOAD (ONLY VIDEO)
-======================= */
+// VIDEO DOWNLOAD
 app.get("/download", async (req, res) => {
   try {
     const url = req.query.url;
-    const name = req.query.name || "tiktok_video";
+    const name = req.query.name || `tiktok_video_${Date.now()}`;
 
-    const apiRes = await fetch(
-      `https://tikwm.com/api/?url=${encodeURIComponent(url)}`
-    );
+    const apiRes = await fetch(`https://tikwm.com/api/?url=${encodeURIComponent(url)}`);
     const apiJson = await apiRes.json();
-    const data = apiJson.data;
 
-    // BLOCK sliders & stories
-    if (data.images || data.is_story) {
-      return res.status(400).send("Not a video");
+    // Check type
+    const data = apiJson?.data;
+    if (!data) return res.status(404).send("Video not found");
+    if (data.is_story || data.itemType === "story") {
+      return res.status(400).send("This is a story link. Use /story endpoint");
+    }
+    if (data.itemType === "slide") {
+      return res.status(400).send("This is a slider. Use /slider endpoint");
     }
 
-    const videoUrl = data.play || data.wmplay;
-    if (!videoUrl) return res.status(404).send("Video not found");
+    const playUrl = data.play || data.wmplay;
+    if (!playUrl) return res.status(404).send("Video URL not found");
 
-    const videoRes = await fetch(videoUrl);
+    const response = await fetch(playUrl);
 
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="${name}.mp4"`
-    );
+    res.setHeader("Content-Disposition", `attachment; filename="${name}.mp4"`);
     res.setHeader("Content-Type", "video/mp4");
 
-    videoRes.body.pipe(res);
-  } catch {
+    response.body.pipe(res);
+  } catch (err) {
+    console.error(err);
     res.status(500).send("Video download failed");
   }
 });
 
-/* =======================
-   STORY DOWNLOAD (ONLY STORY)
-======================= */
+// STORY DOWNLOAD
 app.get("/story", async (req, res) => {
   try {
     const url = req.query.url;
-    const name = req.query.name || "tiktok_story";
+    const name = req.query.name || `tiktok_story_${Date.now()}`;
 
-    const apiRes = await fetch(
-      `https://tikwm.com/api/?url=${encodeURIComponent(url)}`
-    );
+    const apiRes = await fetch(`https://tikwm.com/api/?url=${encodeURIComponent(url)}`);
     const apiJson = await apiRes.json();
-    const data = apiJson.data;
 
-    if (!data.is_story) {
-      return res.status(400).send("Not a story");
+    const data = apiJson?.data;
+    if (!data) return res.status(404).send("Story not found");
+    if (!(data.is_story || data.itemType === "story")) {
+      return res.status(400).send("This is not a story link.");
     }
 
-    const storyUrl = data.play || data.wmplay;
-    if (!storyUrl) return res.status(404).send("Story expired");
+    const playUrl = data.play || data.wmplay;
+    if (!playUrl) return res.status(404).send("Story video not found");
 
-    const storyRes = await fetch(storyUrl);
+    const response = await fetch(playUrl);
 
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="${name}.mp4"`
-    );
+    res.setHeader("Content-Disposition", `attachment; filename="${name}.mp4"`);
     res.setHeader("Content-Type", "video/mp4");
 
-    storyRes.body.pipe(res);
-  } catch {
+    response.body.pipe(res);
+  } catch (err) {
+    console.error(err);
     res.status(500).send("Story download failed");
   }
 });
 
-/* =======================
-   SLIDER METADATA
-======================= */
+// SLIDER DOWNLOAD
 app.get("/slider", async (req, res) => {
   try {
     const url = req.query.url;
+    const name = req.query.name || `tiktok_slider_${Date.now()}`;
 
-    const apiRes = await fetch(
-      `https://tikwm.com/api/?url=${encodeURIComponent(url)}`
-    );
+    const apiRes = await fetch(`https://tikwm.com/api/?url=${encodeURIComponent(url)}`);
     const apiJson = await apiRes.json();
-    const data = apiJson.data;
 
-    if (!data.images || data.images.length === 0) {
-      return res.status(400).json({ error: "Not a slider" });
+    const data = apiJson?.data;
+    if (!data) return res.status(404).send("Slider not found");
+    if (data.itemType !== "slide") return res.status(400).send("This is not a slider post");
+
+    const slides = data.images || data.slides || [];
+    if (!slides.length) return res.status(404).send("No slides available");
+
+    // For now, just send the first slide if only one, otherwise zip all
+    if (slides.length === 1) {
+      const response = await fetch(slides[0]);
+      res.setHeader("Content-Disposition", `attachment; filename="${name}.jpg"`);
+      res.setHeader("Content-Type", "image/jpeg");
+      response.body.pipe(res);
+    } else {
+      const archiver = require("archiver");
+      res.setHeader("Content-Disposition", `attachment; filename="${name}.zip"`);
+      res.setHeader("Content-Type", "application/zip");
+
+      const archive = archiver("zip");
+      archive.pipe(res);
+
+      for (let i = 0; i < slides.length; i++) {
+        const slideResponse = await fetch(slides[i]);
+        archive.append(slideResponse.body, { name: `slide_${i + 1}.jpg` });
+      }
+
+      archive.finalize();
     }
-
-    res.json({
-      images: data.images,
-      caption: data.title,
-      author: data.author
-    });
-  } catch {
-    res.status(500).json({ error: "Slider failed" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Slider download failed");
   }
 });
 
-/* =======================
-   IMAGE DOWNLOAD (FOR SLIDER)
-======================= */
-app.get("/image", async (req, res) => {
-  try {
-    const imgUrl = req.query.url;
-    const name = req.query.name || "photo";
-
-    const imgRes = await fetch(imgUrl);
-
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="${name}.jpg"`
-    );
-    res.setHeader("Content-Type", "image/jpeg");
-
-    imgRes.body.pipe(res);
-  } catch {
-    res.status(500).send("Image download failed");
-  }
-});
-
-/* =======================
-   START SERVER
-======================= */
+// Start server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () =>
-  console.log("Server running on port " + PORT)
-);
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
