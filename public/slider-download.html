@@ -2,25 +2,91 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Preparing Slider Download</title>
+<title>Slideshow Gallery Download</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-  body { font-family: system-ui, sans-serif; background: #f4f4f4; padding: 12px; text-align: center; }
-  .card { background: #fff; max-width: 420px; margin: 20px auto; padding: 15px; border-radius: 14px; box-shadow: 0 6px 18px rgba(0,0,0,.08); text-align: left; }
-  .thumb { width: 100%; height: 240px; border-radius: 12px; background: #ddd; object-fit: cover; }
-  .user { display: flex; align-items: center; margin-top: 12px; }
-  .avatar { width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; background: #ddd; }
-  .username { font-weight: 600; }
-  .caption { font-size: 13px; color: #555; margin-top: 6px; }
-  .status { font-size: 13px; color: #777; margin-top: 10px; }
-  button { margin-top: 14px; padding: 14px; width: 100%; border: none; border-radius: 10px; background: #000; color: #fff; font-size: 15px; cursor: pointer; }
-  button:disabled { background: #666; cursor: not-allowed; }
+  body {
+    font-family: system-ui, sans-serif;
+    background: #f4f4f4;
+    padding: 12px;
+    text-align: center;
+    margin: 0;
+  }
+
+  .main-container {
+    max-width: 450px;
+    margin: 0 auto;
+  }
+
+  /* Each Image + Button pair is a "photo-card" */
+  .photo-card {
+    background: #fff;
+    margin: 20px 0;
+    padding: 15px;
+    border-radius: 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    text-align: left;
+  }
+
+  .slider-img {
+    width: 100%;
+    height: auto; /* Show full image aspect ratio */
+    max-height: 500px;
+    border-radius: 10px;
+    object-fit: contain;
+    background: #eee;
+    display: block;
+  }
+
+  .download-btn {
+    margin-top: 12px;
+    padding: 14px;
+    width: 100%;
+    border: none;
+    border-radius: 10px;
+    background: #000;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .info-header {
+    background: #fff;
+    padding: 15px;
+    border-radius: 14px;
+    margin-bottom: 20px;
+    text-align: left;
+    display: flex;
+    align-items: center;
+  }
+
+  .avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-right: 12px;
+  }
+
+  .username {
+    font-weight: 700;
+    font-size: 16px;
+  }
+
+  .caption {
+    font-size: 14px;
+    color: #444;
+    margin: 10px 5px;
+    text-align: left;
+  }
 </style>
 </head>
 <body>
 
-<h3>Preparing Slider Download…</h3>
-<div id="list"></div>
+<div class="main-container">
+  <h3>Slideshow Gallery</h3>
+  <div id="gallery"></div>
+</div>
 
 <script>
 const params = new URLSearchParams(location.search);
@@ -32,80 +98,77 @@ if (!rawLinks) {
 }
 
 const links = rawLinks.split("\n").map(l => l.trim()).filter(Boolean);
-const list = document.getElementById("list");
+const gallery = document.getElementById("gallery");
 
-links.forEach(async (link, index) => {
-  const card = document.createElement("div");
-  card.className = "card";
-  card.innerHTML = `
-    <img class="thumb">
-    <div class="user">
-      <img class="avatar">
-      <div class="username">Loading…</div>
-    </div>
-    <div class="caption"></div>
-    <div class="status">Fetching slider ${index + 1}…</div>
-  `;
-  list.appendChild(card);
+async function loadSliders() {
+  for (const link of links) {
+    try {
+      const res = await fetch(`/api?url=${encodeURIComponent(link)}`);
+      const json = await res.json();
+      const data = json.data;
 
-  const thumb = card.querySelector(".thumb");
-  const avatar = card.querySelector(".avatar");
-  const usernameEl = card.querySelector(".username");
-  const captionEl = card.querySelector(".caption");
-  const status = card.querySelector(".status");
+      if (!data?.images) continue;
 
-  try {
-    // We fetch from /api first to get the ID, just like the video downloader
-    const res = await fetch(`/api?url=${encodeURIComponent(link)}`);
-    const json = await res.json();
-    const data = json.data;
+      const videoId = data.id || Date.now();
+      
+      // 1. Create Header for this TikTok (Avatar & Username)
+      const header = document.createElement("div");
+      header.className = "info-header";
+      header.innerHTML = `
+        <img class="avatar" src="${data.author.avatar}">
+        <div>
+          <div class="username">@${data.author.unique_id}</div>
+          <div style="font-size:12px; color:gray;">${data.images.length} photos found</div>
+        </div>
+      `;
+      gallery.appendChild(header);
 
-    if (!data?.images || data.images.length === 0) {
-      status.textContent = "Not a slider post (Video detected)";
-      return;
-    }
-
-    // UNIQUE ID LOGIC (Same as your video code)
-    const videoId = data.id || Date.now();
-
-    thumb.src = data.images[0];
-    avatar.src = data.author?.avatar || "";
-    usernameEl.textContent = "@" + (data.author?.unique_id || "user");
-    captionEl.textContent = data.title || "No caption";
-
-    const btn = document.createElement("button");
-    btn.textContent = data.images.length === 1 ? "Download Photo" : `Download ${data.images.length} Photos`;
-
-    btn.onclick = async () => {
-      btn.disabled = true;
-      status.textContent = "Downloading images...";
-
-      for (let i = 0; i < data.images.length; i++) {
-        const a = document.createElement("a");
-        // Using unique tiktok_ID_1.jpg naming format
-        const fileName = `tiktok_${videoId}_${i + 1}`;
-        a.href = `/image?url=${encodeURIComponent(data.images[i])}&name=${fileName}`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        
-        // Small delay to prevent browser from blocking multiple downloads
-        await new Promise(r => setTimeout(r, 1000));
-        status.textContent = `Downloaded ${i + 1}/${data.images.length}`;
+      if(data.title) {
+        const cap = document.createElement("div");
+        cap.className = "caption";
+        cap.textContent = data.title;
+        gallery.appendChild(cap);
       }
 
-      status.textContent = "All photos downloaded!";
-      btn.disabled = false;
-    };
+      // 2. Loop through every image and create a card for EACH one
+      data.images.forEach((imgUrl, i) => {
+        const photoCard = document.createElement("div");
+        photoCard.className = "photo-card";
+        
+        // Image element
+        const img = document.createElement("img");
+        img.className = "slider-img";
+        img.src = imgUrl;
 
-    card.appendChild(btn);
-    status.textContent = "Ready";
+        // Individual Download Button
+        const btn = document.createElement("button");
+        btn.className = "download-btn";
+        btn.textContent = `Download Photo ${i + 1}`;
+        
+        const fileName = `tiktok_${videoId}_${i + 1}`;
+        btn.onclick = () => {
+          window.location.href = `/image?url=${encodeURIComponent(imgUrl)}&name=${fileName}`;
+        };
 
-  } catch (err) {
-    status.textContent = "Failed to load slider";
-    console.error(err);
+        photoCard.appendChild(img);
+        photoCard.appendChild(btn);
+        gallery.appendChild(photoCard);
+      });
+
+      // Separation line if multiple links are processed
+      const hr = document.createElement("hr");
+      hr.style.margin = "40px 0";
+      hr.style.opacity = "0.2";
+      gallery.appendChild(hr);
+
+    } catch (err) {
+      console.error("Failed to load:", err);
+    }
   }
-});
+}
+
+loadSliders();
 </script>
+
 </body>
 </html>
