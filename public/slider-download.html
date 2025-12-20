@@ -4,79 +4,22 @@
 <meta charset="UTF-8">
 <title>Preparing Slider Download</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <style>
-body {
-  font-family: system-ui, sans-serif;
-  background: #f4f4f4;
-  padding: 12px;
-  text-align: center;
-}
-
-.card {
-  background: #fff;
-  max-width: 420px;
-  margin: 20px auto;
-  padding: 15px;
-  border-radius: 14px;
-  box-shadow: 0 6px 18px rgba(0,0,0,.08);
-  text-align: left;
-}
-
-.thumb {
-  width: 100%;
-  height: 240px;
-  border-radius: 12px;
-  background: #ddd;
-  object-fit: cover;
-}
-
-.user {
-  display: flex;
-  align-items: center;
-  margin-top: 12px;
-}
-
-.avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  margin-right: 10px;
-  background: #ddd;
-}
-
-.username {
-  font-weight: 600;
-}
-
-.caption {
-  font-size: 13px;
-  color: #555;
-  margin-top: 6px;
-}
-
-.status {
-  font-size: 13px;
-  color: #777;
-  margin-top: 10px;
-}
-
-button {
-  margin-top: 14px;
-  padding: 14px;
-  width: 100%;
-  border: none;
-  border-radius: 10px;
-  background: #000;
-  color: #fff;
-  font-size: 15px;
-}
+  body { font-family: system-ui, sans-serif; background: #f4f4f4; padding: 12px; text-align: center; }
+  .card { background: #fff; max-width: 420px; margin: 20px auto; padding: 15px; border-radius: 14px; box-shadow: 0 6px 18px rgba(0,0,0,.08); text-align: left; }
+  .thumb { width: 100%; height: 240px; border-radius: 12px; background: #ddd; object-fit: cover; }
+  .user { display: flex; align-items: center; margin-top: 12px; }
+  .avatar { width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; background: #ddd; }
+  .username { font-weight: 600; }
+  .caption { font-size: 13px; color: #555; margin-top: 6px; }
+  .status { font-size: 13px; color: #777; margin-top: 10px; }
+  button { margin-top: 14px; padding: 14px; width: 100%; border: none; border-radius: 10px; background: #000; color: #fff; font-size: 15px; cursor: pointer; }
+  button:disabled { background: #666; cursor: not-allowed; }
 </style>
 </head>
-
 <body>
 
-<h3>Preparing Download…</h3>
+<h3>Preparing Slider Download…</h3>
 <div id="list"></div>
 
 <script>
@@ -92,7 +35,6 @@ const links = rawLinks.split("\n").map(l => l.trim()).filter(Boolean);
 const list = document.getElementById("list");
 
 links.forEach(async (link, index) => {
-
   const card = document.createElement("div");
   card.className = "card";
   card.innerHTML = `
@@ -113,62 +55,57 @@ links.forEach(async (link, index) => {
   const status = card.querySelector(".status");
 
   try {
-    const res = await fetch(`/slider?url=${encodeURIComponent(link)}`);
+    // We fetch from /api first to get the ID, just like the video downloader
+    const res = await fetch(`/api?url=${encodeURIComponent(link)}`);
     const json = await res.json();
+    const data = json.data;
 
-    if (!json.images || json.images.length === 0) {
-      status.textContent = "Not a slider post";
+    if (!data?.images || data.images.length === 0) {
+      status.textContent = "Not a slider post (Video detected)";
       return;
     }
 
-    // Thumbnail
-    thumb.src = json.images[0];
+    // UNIQUE ID LOGIC (Same as your video code)
+    const videoId = data.id || Date.now();
 
-    // Profile
-    avatar.src =
-      json.author?.avatar ||
-      json.author?.avatar_thumb ||
-      "";
-
-    usernameEl.textContent =
-      "@" +
-      (json.author?.unique_id ||
-       json.author?.nickname ||
-       "unknown");
-
-    captionEl.textContent = json.caption || "No caption";
+    thumb.src = data.images[0];
+    avatar.src = data.author?.avatar || "";
+    usernameEl.textContent = "@" + (data.author?.unique_id || "user");
+    captionEl.textContent = data.title || "No caption";
 
     const btn = document.createElement("button");
-    btn.textContent =
-      json.images.length === 1
-        ? "Download Photo"
-        : "Download All Photos";
+    btn.textContent = data.images.length === 1 ? "Download Photo" : `Download ${data.images.length} Photos`;
 
     btn.onclick = async () => {
-      status.textContent = "Downloading…";
+      btn.disabled = true;
+      status.textContent = "Downloading images...";
 
-      for (let i = 0; i < json.images.length; i++) {
+      for (let i = 0; i < data.images.length; i++) {
         const a = document.createElement("a");
-        a.href =
-          `/image?url=${encodeURIComponent(json.images[i])}&name=photo_${i + 1}`;
-        a.download = "";
+        // Using unique tiktok_ID_1.jpg naming format
+        const fileName = `tiktok_${videoId}_${i + 1}`;
+        a.href = `/image?url=${encodeURIComponent(data.images[i])}&name=${fileName}`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        await new Promise(r => setTimeout(r, 900));
+        
+        // Small delay to prevent browser from blocking multiple downloads
+        await new Promise(r => setTimeout(r, 1000));
+        status.textContent = `Downloaded ${i + 1}/${data.images.length}`;
       }
 
-      status.textContent = "Download started";
+      status.textContent = "All photos downloaded!";
+      btn.disabled = false;
     };
 
     card.appendChild(btn);
     status.textContent = "Ready";
 
-  } catch {
+  } catch (err) {
     status.textContent = "Failed to load slider";
+    console.error(err);
   }
 });
 </script>
-
 </body>
 </html>
