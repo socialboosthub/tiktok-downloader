@@ -2,171 +2,134 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Slideshow Gallery Download</title>
+<title>Slideshow Gallery</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-  body {
-    font-family: system-ui, sans-serif;
-    background: #f4f4f4;
-    padding: 12px;
-    text-align: center;
-    margin: 0;
-  }
-
-  .main-container {
-    max-width: 450px;
-    margin: 0 auto;
-  }
-
-  /* Each Image + Button pair is a "photo-card" */
+  body { font-family: system-ui, sans-serif; background: #f4f4f4; padding: 15px; text-align: center; margin: 0; }
+  .main-container { max-width: 450px; margin: 0 auto; }
+  
+  /* Each Photo Container */
   .photo-card {
     background: #fff;
     margin: 20px 0;
-    padding: 15px;
+    padding: 10px;
     border-radius: 14px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    text-align: left;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   }
 
   .slider-img {
     width: 100%;
-    height: auto; /* Show full image aspect ratio */
-    max-height: 500px;
+    height: auto;
     border-radius: 10px;
-    object-fit: contain;
-    background: #eee;
     display: block;
+    background: #eee;
   }
 
   .download-btn {
-    margin-top: 12px;
-    padding: 14px;
+    margin-top: 10px;
+    padding: 15px;
     width: 100%;
     border: none;
     border-radius: 10px;
     background: #000;
     color: #fff;
-    font-size: 15px;
-    font-weight: 600;
+    font-size: 16px;
+    font-weight: bold;
     cursor: pointer;
   }
 
-  .info-header {
+  .profile-section {
     background: #fff;
     padding: 15px;
     border-radius: 14px;
-    margin-bottom: 20px;
     text-align: left;
     display: flex;
     align-items: center;
+    margin-bottom: 10px;
   }
 
-  .avatar {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    margin-right: 12px;
-  }
-
-  .username {
-    font-weight: 700;
-    font-size: 16px;
-  }
-
-  .caption {
-    font-size: 14px;
-    color: #444;
-    margin: 10px 5px;
-    text-align: left;
-  }
+  .avatar { width: 45px; height: 45px; border-radius: 50%; margin-right: 12px; background: #ddd; }
+  .username { font-weight: 700; }
+  #status-msg { margin: 20px; color: #555; }
 </style>
 </head>
 <body>
 
 <div class="main-container">
-  <h3>Slideshow Gallery</h3>
+  <h2 id="status-msg">Loading Gallery...</h2>
   <div id="gallery"></div>
 </div>
 
 <script>
-const params = new URLSearchParams(location.search);
-const rawLinks = params.get("links");
-
-if (!rawLinks) {
-  document.body.innerHTML = "<h3>No links provided</h3>";
-  throw new Error("No links");
-}
-
-const links = rawLinks.split("\n").map(l => l.trim()).filter(Boolean);
-const gallery = document.getElementById("gallery");
-
 async function loadSliders() {
+  const params = new URLSearchParams(location.search);
+  const rawLinks = params.get("links");
+  const gallery = document.getElementById("gallery");
+  const statusMsg = document.getElementById("status-msg");
+
+  if (!rawLinks) {
+    statusMsg.textContent = "No links found in URL";
+    return;
+  }
+
+  const links = rawLinks.split("\n").map(l => l.trim()).filter(Boolean);
+
   for (const link of links) {
     try {
+      // Calling the API route from your server.js
       const res = await fetch(`/api?url=${encodeURIComponent(link)}`);
       const json = await res.json();
+      
+      // TikWM API response is usually in json.data
       const data = json.data;
 
-      if (!data?.images) continue;
+      if (!data || !data.images) {
+        console.log("No images found for this link");
+        continue;
+      }
 
-      const videoId = data.id || Date.now();
-      
-      // 1. Create Header for this TikTok (Avatar & Username)
+      statusMsg.style.display = "none"; // Hide loading text once data arrives
+
+      // 1. Show Profile Header
       const header = document.createElement("div");
-      header.className = "info-header";
+      header.className = "profile-section";
+      const userAvatar = data.author?.avatar || "";
+      const userId = data.author?.unique_id || "tiktok_user";
+      
       header.innerHTML = `
-        <img class="avatar" src="${data.author.avatar}">
-        <div>
-          <div class="username">@${data.author.unique_id}</div>
-          <div style="font-size:12px; color:gray;">${data.images.length} photos found</div>
-        </div>
+        <img class="avatar" src="${userAvatar}">
+        <div class="username">@${userId}</div>
       `;
       gallery.appendChild(header);
 
-      if(data.title) {
-        const cap = document.createElement("div");
-        cap.className = "caption";
-        cap.textContent = data.title;
-        gallery.appendChild(cap);
-      }
-
-      // 2. Loop through every image and create a card for EACH one
+      // 2. Loop through all images
+      const videoId = data.id || Date.now();
+      
       data.images.forEach((imgUrl, i) => {
         const photoCard = document.createElement("div");
         photoCard.className = "photo-card";
         
-        // Image element
-        const img = document.createElement("img");
-        img.className = "slider-img";
-        img.src = imgUrl;
-
-        // Individual Download Button
-        const btn = document.createElement("button");
-        btn.className = "download-btn";
-        btn.textContent = `Download Photo ${i + 1}`;
-        
+        // Use your /image proxy to avoid CORS issues and force download
         const fileName = `tiktok_${videoId}_${i + 1}`;
-        btn.onclick = () => {
-          window.location.href = `/image?url=${encodeURIComponent(imgUrl)}&name=${fileName}`;
-        };
+        const downloadUrl = `/image?url=${encodeURIComponent(imgUrl)}&name=${fileName}`;
 
-        photoCard.appendChild(img);
-        photoCard.appendChild(btn);
+        photoCard.innerHTML = `
+          <img class="slider-img" src="${imgUrl}" alt="Photo ${i+1}">
+          <button class="download-btn" onclick="window.location.href='${downloadUrl}'">
+            Download Photo ${i + 1}
+          </button>
+        `;
         gallery.appendChild(photoCard);
       });
 
-      // Separation line if multiple links are processed
-      const hr = document.createElement("hr");
-      hr.style.margin = "40px 0";
-      hr.style.opacity = "0.2";
-      gallery.appendChild(hr);
-
     } catch (err) {
-      console.error("Failed to load:", err);
+      console.error("Fetch Error:", err);
+      statusMsg.textContent = "Error connecting to server";
     }
   }
 }
 
+// Run the function
 loadSliders();
 </script>
 
