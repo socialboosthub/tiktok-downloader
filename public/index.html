@@ -1,177 +1,363 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>TikTok Downloader</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body { font-family: Arial, sans-serif; background: #000; padding: 20px; margin: 0; color: white; }
-        
-        .tab-container { 
-            display: flex; 
-            width: 100%;
-            gap: 8px; 
-            margin-bottom: 15px; 
-            max-width: 500px;
-            margin: 0 auto 15px auto;
-        }
-        .filter-button {
-            flex: 1; padding: 10px 0; border: none; border-radius: 8px; cursor: pointer; color: white; font-size: 11px; font-weight: bold;
-            background: linear-gradient(to bottom, #EE1D52 50%, #25F4EE 50%);
-            background-size: 100% 200%; background-position: top; transition: 0.4s ease; text-align: center;
-        }
-        .filter-button.selected { background-position: bottom; color: #000; }
+<meta charset="UTF-8">
+<title>TikTok Downloader</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        .gradient-box {
-            background: #121212; 
-            padding: 25px;
-            border-radius: 20px;
-            text-align: center;
-            border: 1px solid #222;
-            max-width: 450px;
-            margin: 0 auto;
-            position: relative;
-        }
+<style>
+:root{
+  --pink:#EE1D52;
+  --cyan:#25F4EE;
+  --dark:#000;
+  --card:#0b0b0b;
+  --border:#1a1a1a;
+  --text:#fff;
+  --muted:#9a9a9a;
+}
 
-        /* THE GLOWING ANIMATION */
-        .glow-wrapper {
-            position: relative;
-            margin-top: 15px;
-            border-radius: 12px;
-            padding: 2px;
-            background: linear-gradient(45deg, #EE1D52, #25F4EE, #EE1D52, #25F4EE);
-            background-size: 400%;
-            animation: glowing 8s linear infinite;
-        }
+*{box-sizing:border-box}
 
-        @keyframes glowing {
-            0% { background-position: 0 0; }
-            50% { background-position: 400% 0; }
-            100% { background-position: 0 0; }
-        }
+body{
+  margin:0;
+  font-family:Arial, Helvetica, sans-serif;
+  background:radial-gradient(circle at top, #0f0f0f, #000);
+  color:var(--text);
+  padding:20px;
+}
 
-        .process-btn { 
-            height: 55px; width: 100%; background: #000; color: white; border-radius: 10px; 
-            border: none; cursor: pointer; font-size: 16px; font-weight: bold;
-            display: none; text-transform: uppercase; letter-spacing: 1px;
-        }
-        .process-btn.active { display: block; }
+/* ---------- TABS ---------- */
+.tab-container{
+  display:flex;
+  gap:6px;
+  max-width:520px;
+  margin:0 auto 18px;
+}
 
-        /* INPUT STYLING */
-        .input-box { display: flex; align-items: center; gap: 8px; border-radius: 10px; padding: 12px; background: white; margin-bottom: 15px; }
-        .input-box input, .input-box textarea { flex: 1; border: none; outline: none; font-size: 16px; color: #333; }
-        .input-box textarea { height: 80px; resize: none; display: none; }
-        
-        .action-btn { border: none; background: #25F4EE; color: #000; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; }
+.filter-button{
+  flex:1;
+  border:none;
+  border-radius:10px;
+  padding:10px 0;
+  font-size:11px;
+  font-weight:bold;
+  cursor:pointer;
+  color:white;
+  background:linear-gradient(180deg,var(--pink) 50%,var(--cyan) 50%);
+  background-size:100% 200%;
+  transition:.4s;
+}
 
-        /* LOADING UI */
-        #loader-stage { display: none; flex-direction: column; align-items: center; padding: 20px; }
-        .tiktok-spinner { position: relative; width: 50px; height: 50px; margin-bottom: 15px; }
-        .tiktok-spinner div { position: absolute; width: 100%; height: 100%; border-radius: 50%; opacity: 0.8; mix-blend-mode: screen; }
-        .cyan { background-color: #25F4EE; animation: move-cyan 1.5s infinite ease-in-out; }
-        .pink { background-color: #EE1D52; animation: move-pink 1.5s infinite ease-in-out; animation-delay: -0.75s; }
-        @keyframes move-cyan { 0%, 100% { transform: translateX(-15px); } 50% { transform: translateX(15px); } }
-        @keyframes move-pink { 0%, 100% { transform: translateX(15px); } 50% { transform: translateX(-15px); } }
-    </style>
+.filter-button.selected{
+  background-position:bottom;
+  color:#000;
+}
+
+/* ---------- MAIN CARD ---------- */
+.gradient-box{
+  max-width:480px;
+  margin:0 auto;
+  background:linear-gradient(180deg,#0f0f0f,#000);
+  border-radius:22px;
+  padding:24px;
+  border:1px solid var(--border);
+  box-shadow:0 0 40px rgba(37,244,238,.06);
+}
+
+h1{
+  font-size:20px;
+  margin:0 0 6px;
+}
+
+p{
+  margin:0;
+  font-size:13px;
+  color:var(--muted);
+}
+
+/* ---------- INPUT ---------- */
+.input-box{
+  margin-top:18px;
+  display:flex;
+  gap:8px;
+  background:#fff;
+  border-radius:12px;
+  padding:12px;
+}
+
+.input-box input,
+.input-box textarea{
+  flex:1;
+  border:none;
+  outline:none;
+  font-size:15px;
+  color:#000;
+}
+
+textarea{
+  display:none;
+  resize:none;
+  height:90px;
+}
+
+.action-btn{
+  border:none;
+  background:var(--cyan);
+  color:#000;
+  font-weight:bold;
+  padding:8px 12px;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+/* ---------- GLOW BUTTON ---------- */
+.glow-wrapper{
+  margin-top:18px;
+  padding:2px;
+  border-radius:14px;
+  background:linear-gradient(45deg,var(--pink),var(--cyan),var(--pink));
+  background-size:400%;
+  animation:glow 8s linear infinite;
+}
+
+@keyframes glow{
+  0%{background-position:0 0}
+  50%{background-position:400% 0}
+  100%{background-position:0 0}
+}
+
+.process-btn{
+  width:100%;
+  height:54px;
+  border:none;
+  border-radius:12px;
+  background:#000;
+  color:white;
+  font-weight:bold;
+  letter-spacing:1px;
+  cursor:pointer;
+  display:none;
+}
+
+.process-btn.active{display:block}
+
+/* ---------- LOADER ---------- */
+#loader-stage{
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  padding:40px 0;
+}
+
+.spinner{
+  width:50px;
+  height:50px;
+  position:relative;
+  margin-bottom:16px;
+}
+
+.spinner div{
+  position:absolute;
+  width:100%;
+  height:100%;
+  border-radius:50%;
+  mix-blend-mode:screen;
+}
+
+.spinner .c{background:var(--cyan);animation:l 1.4s infinite ease}
+.spinner .p{background:var(--pink);animation:r 1.4s infinite ease .7s}
+
+@keyframes l{0%,100%{transform:translateX(-14px)}50%{transform:translateX(14px)}}
+@keyframes r{0%,100%{transform:translateX(14px)}50%{transform:translateX(-14px)}}
+
+/* ---------- BENEFITS ---------- */
+.section{
+  margin-top:30px;
+}
+
+.section h2{
+  font-size:16px;
+  margin-bottom:12px;
+}
+
+.benefits{
+  display:grid;
+  gap:10px;
+}
+
+.benefit{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:14px;
+  font-size:13px;
+}
+
+/* ---------- FAQ ---------- */
+.faq{
+  display:grid;
+  gap:10px;
+}
+
+details{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:14px;
+}
+
+summary{
+  cursor:pointer;
+  font-weight:bold;
+  font-size:14px;
+}
+
+details p{
+  margin-top:10px;
+  font-size:13px;
+  color:#cfcfcf;
+}
+</style>
 </head>
+
 <body>
 
-    <div class="tab-container" id="tabs">
-        <button class="filter-button selected" onclick="switchTab(0)">Video</button>
-        <button class="filter-button" onclick="switchTab(1)">Profile</button>
-        <button class="filter-button" onclick="switchTab(2)">Story</button>
-        <button class="filter-button" onclick="switchTab(3)">Slider</button>
-        <button class="filter-button" onclick="switchTab(4)">Multi</button>
-    </div>
+<div class="tab-container" id="tabs">
+  <button class="filter-button selected" onclick="switchTab(0)">Video</button>
+  <button class="filter-button" onclick="switchTab(1)">Profile</button>
+  <button class="filter-button" onclick="switchTab(2)">Story</button>
+  <button class="filter-button" onclick="switchTab(3)">Slider</button>
+  <button class="filter-button" onclick="switchTab(4)">Multi</button>
+</div>
 
-    <div class="gradient-box">
-        <div id="main-ui">
-            <h1 id="page-title" style="font-size: 20px;">Download TikTok Videos</h1>
-            <p id="page-desc" style="font-size: 13px; color: #aaa;">Paste link below to download high-quality content.</p>
+<div class="gradient-box">
 
-            <div class="input-box">
-                <input type="text" id="main-input" placeholder="Paste TikTok video link" oninput="toggleActionButtons()">
-                <textarea id="multi-input" placeholder="Paste links (one per line)" oninput="toggleActionButtons()"></textarea>
-                <button class="action-btn" id="paste-btn" onclick="handlePaste()">Paste</button>
-                <button class="action-btn" id="clear-btn" style="display:none" onclick="handleClear()">Clear</button>
-            </div>
+<div id="main-ui">
+<h1 id="page-title">Download TikTok Videos</h1>
+<p>Paste your TikTok link and download instantly.</p>
 
-            <div class="glow-wrapper">
-                <button id="pbtn-0" class="process-btn active" onclick="go('video-download.html')">Process Video Link</button>
-                <button id="pbtn-1" class="process-btn" onclick="go('profile-download.html')">Process Profile Link</button>
-                <button id="pbtn-2" class="process-btn" onclick="go('story-download.html')">Process Story Link</button>
-                <button id="pbtn-3" class="process-btn" onclick="go('slider-download.html')">Process Slider Link</button>
-                <button id="pbtn-4" class="process-btn" onclick="go('download.html')">Process Multi Links</button>
-            </div>
-        </div>
+<div class="input-box">
+  <input id="main-input" placeholder="Paste TikTok link" oninput="toggleBtns()">
+  <textarea id="multi-input" placeholder="Paste multiple links (one per line)" oninput="toggleBtns()"></textarea>
+  <button id="paste-btn" class="action-btn" onclick="paste()">Paste</button>
+  <button id="clear-btn" class="action-btn" style="display:none" onclick="clearAll()">Clear</button>
+</div>
 
-        <div id="loader-stage">
-            <div class="tiktok-spinner">
-                <div class="cyan"></div>
-                <div class="pink"></div>
-            </div>
-            <p style="letter-spacing: 2px; font-weight: bold; font-size: 14px;">SUCCESS! ANALYZING...</p>
-        </div>
-    </div>
+<div class="glow-wrapper">
+  <button class="process-btn active" onclick="go('video-download.html')">PROCESS VIDEO</button>
+  <button class="process-btn" onclick="go('profile-download.html')">PROCESS PROFILE</button>
+  <button class="process-btn" onclick="go('story-download.html')">PROCESS STORY</button>
+  <button class="process-btn" onclick="go('slider-download.html')">PROCESS SLIDER</button>
+  <button class="process-btn" onclick="go('download.html')">PROCESS MULTI</button>
+</div>
 
-    <script>
-        const tabConfigs = [
-            { title: "Download TikTok Videos", target: "video-download.html" },
-            { title: "TikTok Profile Downloader", target: "profile-download.html" },
-            { title: "Free TikTok Story Saver", target: "story-download.html" },
-            { title: "TikTok Slider Downloader", target: "slider-download.html" },
-            { title: "TikTok Multi Downloader", target: "download.html" }
-        ];
+<!-- BENEFITS -->
+<div class="section">
+<h2>Why use this downloader?</h2>
+<div class="benefits">
+  <div class="benefit">No watermark downloads</div>
+  <div class="benefit">Ultra-fast processing</div>
+  <div class="benefit">Video, profile, story & slider support</div>
+  <div class="benefit">No login required</div>
+  <div class="benefit">Works on all devices</div>
+</div>
+</div>
 
-        let activeTab = 0;
+<!-- FAQ -->
+<div class="section">
+<h2>How to use</h2>
+<div class="faq">
+  <details>
+    <summary>How do I download a TikTok video?</summary>
+    <p>Copy the TikTok video link, paste it above, then click process.</p>
+  </details>
 
-        function switchTab(idx) {
-            activeTab = idx;
-            document.querySelectorAll('.filter-button').forEach((b, i) => b.classList.toggle('selected', i === idx));
-            document.querySelectorAll('.process-btn').forEach((p, i) => p.classList.toggle('active', i === idx));
-            document.getElementById('page-title').textContent = tabConfigs[idx].title;
-            
-            const isMulti = idx === 4;
-            document.getElementById('main-input').style.display = isMulti ? 'none' : 'block';
-            document.getElementById('multi-input').style.display = isMulti ? 'block' : 'none';
-            handleClear();
-        }
+  <details>
+    <summary>Can I download without watermark?</summary>
+    <p>Yes. Videos are downloaded clean with no TikTok watermark.</p>
+  </details>
 
-        function toggleActionButtons() {
-            const val = (activeTab === 4 ? document.getElementById('multi-input') : document.getElementById('main-input')).value;
-            document.getElementById('paste-btn').style.display = val ? 'none' : 'block';
-            document.getElementById('clear-btn').style.display = val ? 'block' : 'none';
-        }
+  <details>
+    <summary>Does this work on private accounts?</summary>
+    <p>No. Only public TikTok content can be downloaded.</p>
+  </details>
 
-        async function handlePaste() {
-            try {
-                const text = await navigator.clipboard.readText();
-                const input = activeTab === 4 ? document.getElementById('multi-input') : document.getElementById('main-input');
-                input.value = text;
-                toggleActionButtons();
-            } catch (err) {}
-        }
+  <details>
+    <summary>Is this free?</summary>
+    <p>Yes. The downloader is completely free to use.</p>
+  </details>
+</div>
+</div>
 
-        function handleClear() {
-            document.getElementById('main-input').value = "";
-            document.getElementById('multi-input').value = "";
-            toggleActionButtons();
-        }
+</div>
 
-        function go(targetFile) {
-            const val = (activeTab === 4 ? document.getElementById('multi-input') : document.getElementById('main-input')).value.trim();
-            if (!val) return alert("Paste a link first!");
+<div id="loader-stage">
+  <div class="spinner">
+    <div class="c"></div>
+    <div class="p"></div>
+  </div>
+  <p>ANALYZING LINK...</p>
+</div>
 
-            // Trigger In-Page Loader
-            document.getElementById('main-ui').style.display = 'none';
-            document.getElementById('tabs').style.opacity = '0.3';
-            document.getElementById('loader-stage').style.display = 'flex';
+</div>
 
-            // Wait 1.5s for "cool effect" then redirect
-            setTimeout(() => {
-                window.location.href = targetFile + "?links=" + encodeURIComponent(val);
-            }, 1500);
-        }
-    </script>
+<script>
+const titles=[
+"Download TikTok Videos",
+"TikTok Profile Downloader",
+"TikTok Story Saver",
+"TikTok Slider Downloader",
+"TikTok Multi Downloader"
+];
+
+let tab=0;
+
+function switchTab(i){
+  tab=i;
+  document.querySelectorAll('.filter-button').forEach((b,x)=>b.classList.toggle('selected',x===i));
+  document.querySelectorAll('.process-btn').forEach((b,x)=>b.classList.toggle('active',x===i));
+  document.getElementById('page-title').textContent=titles[i];
+  mainInput.style.display=i===4?'none':'block';
+  multiInput.style.display=i===4?'block':'none';
+  clearAll();
+}
+
+const mainInput=document.getElementById('main-input');
+const multiInput=document.getElementById('multi-input');
+
+function toggleBtns(){
+  const v=(tab===4?multiInput:mainInput).value;
+  pasteBtn.style.display=v?'none':'block';
+  clearBtn.style.display=v?'block':'none';
+}
+
+async function paste(){
+  try{
+    const t=await navigator.clipboard.readText();
+    (tab===4?multiInput:mainInput).value=t;
+    toggleBtns();
+  }catch{}
+}
+
+function clearAll(){
+  mainInput.value='';
+  multiInput.value='';
+  toggleBtns();
+}
+
+function go(file){
+  const v=(tab===4?multiInput:mainInput).value.trim();
+  if(!v)return alert("Paste a link first");
+  mainUi.style.display='none';
+  loader.style.display='flex';
+  setTimeout(()=>location.href=file+"?links="+encodeURIComponent(v),1500);
+}
+
+const pasteBtn=document.getElementById('paste-btn');
+const clearBtn=document.getElementById('clear-btn');
+const mainUi=document.getElementById('main-ui');
+const loader=document.getElementById('loader-stage');
+</script>
+
 </body>
 </html>
