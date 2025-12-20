@@ -8,55 +8,84 @@
   body { font-family: system-ui, sans-serif; background: #f4f4f4; padding: 15px; text-align: center; margin: 0; }
   .main-container { max-width: 450px; margin: 0 auto; }
   
-  /* Each Photo Container */
+  /* LOADING BOX STYLE */
+  #loading-box {
+    background: #fff;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    margin-top: 50px;
+  }
+
+  .spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #000;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+  }
+
+  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+  /* GALLERY STYLES */
+  #gallery { display: none; } /* Hidden until loaded */
+
   .photo-card {
     background: #fff;
     margin: 20px 0;
-    padding: 10px;
-    border-radius: 14px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    padding: 12px;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   }
 
   .slider-img {
     width: 100%;
     height: auto;
-    border-radius: 10px;
+    border-radius: 12px;
     display: block;
-    background: #eee;
   }
 
   .download-btn {
-    margin-top: 10px;
-    padding: 15px;
+    margin-top: 12px;
+    padding: 16px;
     width: 100%;
     border: none;
-    border-radius: 10px;
+    border-radius: 12px;
     background: #000;
     color: #fff;
     font-size: 16px;
     font-weight: bold;
     cursor: pointer;
+    transition: transform 0.2s;
   }
+
+  .download-btn:active { transform: scale(0.98); }
 
   .profile-section {
     background: #fff;
     padding: 15px;
-    border-radius: 14px;
+    border-radius: 16px;
     text-align: left;
     display: flex;
     align-items: center;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
   }
 
-  .avatar { width: 45px; height: 45px; border-radius: 50%; margin-right: 12px; background: #ddd; }
-  .username { font-weight: 700; }
-  #status-msg { margin: 20px; color: #555; }
+  .avatar { width: 48px; height: 48px; border-radius: 50%; margin-right: 12px; border: 2px solid #eee; }
+  .username { font-weight: 700; font-size: 18px; }
 </style>
 </head>
 <body>
 
 <div class="main-container">
-  <h2 id="status-msg">Loading Gallery...</h2>
+  <div id="loading-box">
+    <div class="spinner"></div>
+    <h3 style="margin:0;">Processing Link...</h3>
+    <p style="color: #666; font-size: 14px;">Getting your images ready</p>
+  </div>
+
   <div id="gallery"></div>
 </div>
 
@@ -65,71 +94,62 @@ async function loadSliders() {
   const params = new URLSearchParams(location.search);
   const rawLinks = params.get("links");
   const gallery = document.getElementById("gallery");
-  const statusMsg = document.getElementById("status-msg");
+  const loadingBox = document.getElementById("loading-box");
 
   if (!rawLinks) {
-    statusMsg.textContent = "No links found in URL";
+    loadingBox.innerHTML = "<h3>No links provided</h3>";
     return;
   }
 
   const links = rawLinks.split("\n").map(l => l.trim()).filter(Boolean);
 
-  for (const link of links) {
-    try {
-      // Calling the API route from your server.js
+  try {
+    // Process each link
+    for (const link of links) {
       const res = await fetch(`/api?url=${encodeURIComponent(link)}`);
       const json = await res.json();
-      
-      // TikWM API response is usually in json.data
       const data = json.data;
 
-      if (!data || !data.images) {
-        console.log("No images found for this link");
-        continue;
-      }
+      if (!data || !data.images) continue;
 
-      statusMsg.style.display = "none"; // Hide loading text once data arrives
-
-      // 1. Show Profile Header
+      // Create Profile Header
       const header = document.createElement("div");
       header.className = "profile-section";
-      const userAvatar = data.author?.avatar || "";
-      const userId = data.author?.unique_id || "tiktok_user";
-      
       header.innerHTML = `
-        <img class="avatar" src="${userAvatar}">
-        <div class="username">@${userId}</div>
+        <img class="avatar" src="${data.author?.avatar || ''}">
+        <div class="username">@${data.author?.unique_id || 'user'}</div>
       `;
       gallery.appendChild(header);
 
-      // 2. Loop through all images
+      // Create Photo Cards
       const videoId = data.id || Date.now();
-      
       data.images.forEach((imgUrl, i) => {
         const photoCard = document.createElement("div");
         photoCard.className = "photo-card";
         
-        // Use your /image proxy to avoid CORS issues and force download
         const fileName = `tiktok_${videoId}_${i + 1}`;
         const downloadUrl = `/image?url=${encodeURIComponent(imgUrl)}&name=${fileName}`;
 
         photoCard.innerHTML = `
-          <img class="slider-img" src="${imgUrl}" alt="Photo ${i+1}">
+          <img class="slider-img" src="${imgUrl}">
           <button class="download-btn" onclick="window.location.href='${downloadUrl}'">
             Download Photo ${i + 1}
           </button>
         `;
         gallery.appendChild(photoCard);
       });
-
-    } catch (err) {
-      console.error("Fetch Error:", err);
-      statusMsg.textContent = "Error connecting to server";
     }
+
+    // FINISHED: Hide loading, show gallery
+    loadingBox.style.display = "none";
+    gallery.style.display = "block";
+
+  } catch (err) {
+    loadingBox.innerHTML = "<h3>Error loading images</h3><p>Please check your connection.</p>";
   }
 }
 
-// Run the function
+// Auto-run on page load
 loadSliders();
 </script>
 
