@@ -5,45 +5,36 @@
     <title>TikTok Downloader</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { font-family: Arial, sans-serif; background: #000; padding: 20px; margin: 0; color: white; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #000; padding: 20px; margin: 0; color: white; }
         
         .tab-container { 
-            display: flex; 
-            width: 100%;
-            gap: 8px; 
-            margin-bottom: 15px; 
-            max-width: 500px;
-            margin: 0 auto 15px auto;
+            display: flex; width: 100%; gap: 8px; margin: 0 auto 15px auto; max-width: 500px;
         }
         .filter-button {
-            flex: 1; padding: 10px 0; border: none; border-radius: 8px; cursor: pointer; color: white; font-size: 11px; font-weight: bold;
+            flex: 1; padding: 12px 0; border: none; border-radius: 8px; cursor: pointer; color: white; font-size: 11px; font-weight: bold;
             background: linear-gradient(to bottom, #EE1D52 50%, #25F4EE 50%);
             background-size: 100% 200%; background-position: top; transition: 0.4s ease; text-align: center;
         }
         .filter-button.selected { background-position: bottom; color: #000; }
 
         .gradient-box {
-            background: #121212; 
-            padding: 25px;
-            border-radius: 20px;
-            text-align: center;
-            border: 1px solid #222;
-            max-width: 450px;
-            margin: 0 auto;
-            position: relative;
+            background: #121212; padding: 25px; border-radius: 20px; text-align: center;
+            border: 1px solid #222; max-width: 450px; margin: 0 auto; position: relative;
         }
 
-        /* THE GLOWING ANIMATION */
+        /* Error Shake Animation */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .error-shake { animation: shake 0.2s ease-in-out 0s 2; border: 2px solid #EE1D52 !important; }
+
         .glow-wrapper {
-            position: relative;
-            margin-top: 15px;
-            border-radius: 12px;
-            padding: 2px;
+            position: relative; margin-top: 15px; border-radius: 12px; padding: 2px;
             background: linear-gradient(45deg, #EE1D52, #25F4EE, #EE1D52, #25F4EE);
-            background-size: 400%;
-            animation: glowing 8s linear infinite;
+            background-size: 400%; animation: glowing 8s linear infinite;
         }
-
         @keyframes glowing {
             0% { background-position: 0 0; }
             50% { background-position: 400% 0; }
@@ -57,14 +48,12 @@
         }
         .process-btn.active { display: block; }
 
-        /* INPUT STYLING */
-        .input-box { display: flex; align-items: center; gap: 8px; border-radius: 10px; padding: 12px; background: white; margin-bottom: 15px; }
-        .input-box input, .input-box textarea { flex: 1; border: none; outline: none; font-size: 16px; color: #333; }
+        .input-box { display: flex; align-items: center; gap: 8px; border-radius: 10px; padding: 12px; background: white; margin-bottom: 15px; border: 2px solid transparent; transition: 0.3s; }
+        .input-box input, .input-box textarea { flex: 1; border: none; outline: none; font-size: 16px; color: #333; width: 100%; }
         .input-box textarea { height: 80px; resize: none; display: none; }
         
-        .action-btn { border: none; background: #25F4EE; color: #000; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; }
+        .action-btn { border: none; background: #25F4EE; color: #000; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; white-space: nowrap; }
 
-        /* LOADING UI */
         #loader-stage { display: none; flex-direction: column; align-items: center; padding: 20px; }
         .tiktok-spinner { position: relative; width: 50px; height: 50px; margin-bottom: 15px; }
         .tiktok-spinner div { position: absolute; width: 100%; height: 100%; border-radius: 50%; opacity: 0.8; mix-blend-mode: screen; }
@@ -87,11 +76,11 @@
     <div class="gradient-box">
         <div id="main-ui">
             <h1 id="page-title" style="font-size: 20px;">Download TikTok Videos</h1>
-            <p id="page-desc" style="font-size: 13px; color: #aaa;">Paste link below to download high-quality content.</p>
+            <p id="page-desc" style="font-size: 13px; color: #aaa;">Paste a TikTok link to start downloading.</p>
 
-            <div class="input-box">
-                <input type="text" id="main-input" placeholder="Paste TikTok video link" oninput="toggleActionButtons()">
-                <textarea id="multi-input" placeholder="Paste links (one per line)" oninput="toggleActionButtons()"></textarea>
+            <div class="input-box" id="input-container">
+                <input type="text" id="main-input" placeholder="https://www.tiktok.com/..." oninput="validateInput()">
+                <textarea id="multi-input" placeholder="Paste multiple links (one per line)" oninput="validateInput()"></textarea>
                 <button class="action-btn" id="paste-btn" onclick="handlePaste()">Paste</button>
                 <button class="action-btn" id="clear-btn" style="display:none" onclick="handleClear()">Clear</button>
             </div>
@@ -110,20 +99,23 @@
                 <div class="cyan"></div>
                 <div class="pink"></div>
             </div>
-            <p style="letter-spacing: 2px; font-weight: bold; font-size: 14px;">SUCCESS! ANALYZING...</p>
+            <p style="letter-spacing: 2px; font-weight: bold; font-size: 14px;">ANALYZING LINK...</p>
         </div>
     </div>
 
     <script>
         const tabConfigs = [
-            { title: "Download TikTok Videos", target: "video-download.html" },
-            { title: "TikTok Profile Downloader", target: "profile-download.html" },
-            { title: "Free TikTok Story Saver", target: "story-download.html" },
-            { title: "TikTok Slider Downloader", target: "slider-download.html" },
-            { title: "TikTok Multi Downloader", target: "download.html" }
+            { title: "Download TikTok Videos" },
+            { title: "TikTok Profile Downloader" },
+            { title: "Free TikTok Story Saver" },
+            { title: "TikTok Slider Downloader" },
+            { title: "TikTok Multi Downloader" }
         ];
 
         let activeTab = 0;
+
+        // Validation Pattern: Matches tiktok.com, vm.tiktok, and vt.tiktok
+        const isTikTokLink = (url) => /tiktok\.com/.test(url);
 
         function switchTab(idx) {
             activeTab = idx;
@@ -137,8 +129,9 @@
             handleClear();
         }
 
-        function toggleActionButtons() {
-            const val = (activeTab === 4 ? document.getElementById('multi-input') : document.getElementById('main-input')).value;
+        function validateInput() {
+            const input = activeTab === 4 ? document.getElementById('multi-input') : document.getElementById('main-input');
+            const val = input.value.trim();
             document.getElementById('paste-btn').style.display = val ? 'none' : 'block';
             document.getElementById('clear-btn').style.display = val ? 'block' : 'none';
         }
@@ -146,28 +139,54 @@
         async function handlePaste() {
             try {
                 const text = await navigator.clipboard.readText();
+                
+                // If it's not a TikTok link and not the Multi tab
+                if (activeTab !== 4 && !isTikTokLink(text)) {
+                    triggerError();
+                    alert("Error: Please paste a valid TikTok link.");
+                    return;
+                }
+
                 const input = activeTab === 4 ? document.getElementById('multi-input') : document.getElementById('main-input');
                 input.value = text;
-                toggleActionButtons();
-            } catch (err) {}
+                validateInput();
+            } catch (err) {
+                alert("Please allow clipboard permissions to use Paste.");
+            }
+        }
+
+        function triggerError() {
+            const container = document.getElementById('input-container');
+            container.classList.add('error-shake');
+            setTimeout(() => container.classList.remove('error-shake'), 400);
         }
 
         function handleClear() {
             document.getElementById('main-input').value = "";
             document.getElementById('multi-input').value = "";
-            toggleActionButtons();
+            validateInput();
         }
 
         function go(targetFile) {
-            const val = (activeTab === 4 ? document.getElementById('multi-input') : document.getElementById('main-input')).value.trim();
-            if (!val) return alert("Paste a link first!");
+            const input = activeTab === 4 ? document.getElementById('multi-input') : document.getElementById('main-input');
+            const val = input.value.trim();
 
-            // Trigger In-Page Loader
+            if (!val) {
+                triggerError();
+                return;
+            }
+
+            // Check validity again before proceeding
+            if (activeTab !== 4 && !isTikTokLink(val)) {
+                triggerError();
+                alert("This is not a valid TikTok link!");
+                return;
+            }
+
             document.getElementById('main-ui').style.display = 'none';
             document.getElementById('tabs').style.opacity = '0.3';
             document.getElementById('loader-stage').style.display = 'flex';
 
-            // Wait 1.5s for "cool effect" then redirect
             setTimeout(() => {
                 window.location.href = targetFile + "?links=" + encodeURIComponent(val);
             }, 1500);
