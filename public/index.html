@@ -6,334 +6,304 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-:root{
-  --pink:#EE1D52;
-  --cyan:#25F4EE;
-  --dark:#000;
-}
-
-*{box-sizing:border-box}
-
 body{
-  margin:0;
-  font-family:Arial, Helvetica, sans-serif;
-  color:white;
-  background:
-    radial-gradient(circle at 20% 20%, rgba(238,29,82,.15), transparent 40%),
-    radial-gradient(circle at 80% 80%, rgba(37,244,238,.15), transparent 40%),
-    #000;
-  min-height:100vh;
+  font-family:Arial,sans-serif;
+  background:#000;
   padding:20px;
-  overflow-x:hidden;
+  margin:0;
+  color:#fff;
 }
 
-/* ====== FLOATING GLOW ====== */
-body::before{
-  content:"";
-  position:fixed;
-  inset:0;
-  background:
-    linear-gradient(120deg, transparent 40%, rgba(37,244,238,.06), transparent 60%),
-    linear-gradient(240deg, transparent 40%, rgba(238,29,82,.06), transparent 60%);
-  animation:move 12s linear infinite;
-  pointer-events:none;
-}
-
-@keyframes move{
-  from{transform:translateX(-30%)}
-  to{transform:translateX(30%)}
-}
-
-/* ====== TABS ====== */
 .tab-container{
   display:flex;
-  gap:6px;
-  max-width:540px;
-  margin:0 auto 20px;
+  gap:8px;
+  max-width:500px;
+  margin:0 auto 15px;
 }
 
 .filter-button{
   flex:1;
-  padding:11px 0;
-  font-size:11px;
-  font-weight:900;
+  padding:10px 0;
   border:none;
-  border-radius:12px;
+  border-radius:8px;
   cursor:pointer;
+  font-size:11px;
+  font-weight:bold;
   color:white;
-  background:linear-gradient(180deg,var(--pink),var(--cyan));
-  opacity:.4;
-  transition:.3s;
+  background:linear-gradient(to bottom,#EE1D52 50%,#25F4EE 50%);
+  background-size:100% 200%;
+  background-position:top;
+  transition:.4s;
 }
 
 .filter-button.selected{
-  opacity:1;
+  background-position:bottom;
   color:#000;
-  box-shadow:0 0 18px rgba(37,244,238,.6);
 }
 
-/* ====== MAIN CARD ====== */
-.card{
-  max-width:500px;
+.gradient-box{
+  background:#121212;
+  padding:25px;
+  border-radius:20px;
+  border:1px solid #222;
+  max-width:450px;
   margin:0 auto;
-  background:rgba(0,0,0,.85);
-  border-radius:26px;
-  padding:26px;
-  border:1px solid rgba(255,255,255,.08);
-  box-shadow:
-    0 0 40px rgba(238,29,82,.15),
-    inset 0 0 40px rgba(37,244,238,.05);
+  text-align:center;
 }
 
-h1{
-  margin:0;
-  font-size:22px;
-  letter-spacing:.5px;
-}
-
-.subtitle{
-  font-size:13px;
-  color:#aaa;
-  margin-top:6px;
-}
-
-/* ====== INPUT ====== */
-.input-wrap{
-  margin-top:20px;
-  background:white;
-  border-radius:14px;
-  padding:12px;
-  display:flex;
-  gap:8px;
-}
-
-.input-wrap input,
-.input-wrap textarea{
-  flex:1;
-  border:none;
-  outline:none;
-  font-size:15px;
-  color:black;
-}
-
-textarea{display:none; resize:none; height:90px}
-
-.btn{
-  background:var(--cyan);
-  border:none;
-  font-weight:900;
-  padding:8px 12px;
-  border-radius:8px;
-  cursor:pointer;
-}
-
-/* ====== NEON BUTTON ====== */
-.neon-wrap{
-  margin-top:20px;
+.glow-wrapper{
+  margin-top:15px;
   padding:2px;
-  border-radius:16px;
-  background:linear-gradient(90deg,var(--pink),var(--cyan),var(--pink));
-  background-size:300%;
-  animation:neon 6s linear infinite;
+  border-radius:12px;
+  background:linear-gradient(45deg,#EE1D52,#25F4EE,#EE1D52);
+  background-size:400%;
+  animation:glow 8s linear infinite;
 }
 
-@keyframes neon{
-  0%{background-position:0%}
-  50%{background-position:100%}
-  100%{background-position:0%}
+@keyframes glow{
+  0%{background-position:0 0}
+  50%{background-position:400% 0}
+  100%{background-position:0 0}
 }
 
 .process-btn{
   width:100%;
-  height:56px;
-  border:none;
-  border-radius:14px;
-  background:black;
+  height:55px;
+  background:#000;
   color:white;
-  font-weight:900;
-  letter-spacing:1.5px;
+  border:none;
+  border-radius:10px;
+  font-size:16px;
+  font-weight:bold;
   cursor:pointer;
   display:none;
+  letter-spacing:1px;
 }
 
-.process-btn.active{
-  display:block;
+.process-btn.active{display:block}
+
+.input-box{
+  display:flex;
+  gap:8px;
+  background:#fff;
+  border-radius:10px;
+  padding:12px;
+  margin-bottom:15px;
 }
 
-/* ====== BENEFITS ====== */
-.section{
-  margin-top:34px;
-}
-
-.section h2{
+.input-box input,
+.input-box textarea{
+  flex:1;
+  border:none;
+  outline:none;
   font-size:16px;
-  margin-bottom:14px;
 }
 
-.benefits{
-  display:grid;
-  gap:12px;
+textarea{
+  display:none;
+  height:80px;
+  resize:none;
 }
 
-.benefit{
-  padding:16px;
-  border-radius:16px;
-  background:linear-gradient(135deg,rgba(238,29,82,.15),rgba(37,244,238,.15));
-  border:1px solid rgba(255,255,255,.08);
-  font-size:13px;
-  backdrop-filter:blur(6px);
-}
-
-/* ====== FAQ ====== */
-details{
-  background:rgba(255,255,255,.03);
-  border:1px solid rgba(255,255,255,.08);
-  border-radius:16px;
-  padding:16px;
-  margin-bottom:12px;
-  transition:.3s;
-}
-
-details[open]{
-  box-shadow:0 0 20px rgba(238,29,82,.25);
-}
-
-summary{
+.action-btn{
+  background:#25F4EE;
+  border:none;
+  padding:8px 12px;
+  border-radius:6px;
+  font-weight:bold;
   cursor:pointer;
-  font-weight:900;
-  font-size:14px;
 }
 
-details p{
-  margin-top:10px;
-  font-size:13px;
-  color:#ccc;
-}
-
-/* ====== LOADER ====== */
-#loader{
+#loader-stage{
   display:none;
   flex-direction:column;
   align-items:center;
-  padding:60px 0;
+  padding:20px;
 }
 
-.loader-circle{
-  width:60px;
-  height:60px;
+.spinner{
+  width:50px;
+  height:50px;
   position:relative;
+  margin-bottom:15px;
 }
 
-.loader-circle div{
+.spinner div{
   position:absolute;
-  inset:0;
+  width:100%;
+  height:100%;
   border-radius:50%;
   mix-blend-mode:screen;
 }
 
-.c{background:var(--cyan); animation:l 1.2s infinite}
-.p{background:var(--pink); animation:r 1.2s infinite .6s}
+.cyan{background:#25F4EE;animation:l 1.5s infinite}
+.pink{background:#EE1D52;animation:r 1.5s infinite -.75s}
 
-@keyframes l{0%,100%{transform:translateX(-18px)}50%{transform:translateX(18px)}}
-@keyframes r{0%,100%{transform:translateX(18px)}50%{transform:translateX(-18px)}}
+@keyframes l{0%,100%{transform:translateX(-15px)}50%{transform:translateX(15px)}}
+@keyframes r{0%,100%{transform:translateX(15px)}50%{transform:translateX(-15px)}}
+
+/* EXTRA SECTIONS */
+.extra{
+  max-width:450px;
+  margin:25px auto;
+}
+
+.card{
+  background:#121212;
+  border:1px solid #222;
+  border-radius:12px;
+  padding:12px;
+  font-size:13px;
+  margin-bottom:8px;
+}
+
+details{
+  background:#121212;
+  border:1px solid #222;
+  border-radius:12px;
+  padding:12px;
+  margin-bottom:8px;
+}
+
+summary{
+  cursor:pointer;
+  font-weight:bold;
+  font-size:13px;
+}
+
+details p{
+  color:#aaa;
+  font-size:13px;
+  margin-top:8px;
+}
 </style>
 </head>
 
 <body>
 
-<div class="tab-container">
-  <button class="filter-button selected" onclick="tabSwitch(0)">VIDEO</button>
-  <button class="filter-button" onclick="tabSwitch(1)">PROFILE</button>
-  <button class="filter-button" onclick="tabSwitch(2)">STORY</button>
-  <button class="filter-button" onclick="tabSwitch(3)">SLIDER</button>
-  <button class="filter-button" onclick="tabSwitch(4)">MULTI</button>
+<div class="tab-container" id="tabs">
+  <button class="filter-button selected" onclick="switchTab(0)">Video</button>
+  <button class="filter-button" onclick="switchTab(1)">Profile</button>
+  <button class="filter-button" onclick="switchTab(2)">Story</button>
+  <button class="filter-button" onclick="switchTab(3)">Slider</button>
+  <button class="filter-button" onclick="switchTab(4)">Multi</button>
 </div>
 
-<div class="card">
+<div class="gradient-box">
 
-<div id="ui">
-<h1 id="title">TikTok Video Downloader</h1>
-<div class="subtitle">Fast. Clean. No watermark.</div>
+<div id="main-ui">
+<h1 id="title">Download TikTok Videos</h1>
+<p style="font-size:13px;color:#aaa">Paste TikTok link only</p>
 
-<div class="input-wrap">
-  <input id="input" placeholder="Paste TikTok link">
-  <textarea id="multi" placeholder="Paste multiple links"></textarea>
-  <button class="btn" onclick="paste()">Paste</button>
+<div class="input-box">
+  <input id="input" placeholder="Paste TikTok link" oninput="toggleBtns()">
+  <textarea id="multi" placeholder="Paste TikTok links (one per line)" oninput="toggleBtns()"></textarea>
+  <button class="action-btn" id="paste" onclick="paste()">Paste</button>
+  <button class="action-btn" id="clear" style="display:none" onclick="clearAll()">Clear</button>
 </div>
 
-<div class="neon-wrap">
-  <button class="process-btn active" onclick="go('video-download.html')">DOWNLOAD</button>
-  <button class="process-btn" onclick="go('profile-download.html')">FETCH PROFILE</button>
-  <button class="process-btn" onclick="go('story-download.html')">SAVE STORY</button>
-  <button class="process-btn" onclick="go('slider-download.html')">GET SLIDER</button>
-  <button class="process-btn" onclick="go('download.html')">PROCESS ALL</button>
-</div>
-
-<div class="section">
-<h2>Why this hits different</h2>
-<div class="benefits">
-  <div class="benefit">⚡ Lightning fast processing</div>
-  <div class="benefit">🚫 Zero watermark</div>
-  <div class="benefit">📱 Works on all devices</div>
-  <div class="benefit">🔓 No login needed</div>
+<div class="glow-wrapper">
+  <button class="process-btn active" onclick="go('video-download.html')">Process Video</button>
+  <button class="process-btn" onclick="go('profile-download.html')">Process Profile</button>
+  <button class="process-btn" onclick="go('story-download.html')">Process Story</button>
+  <button class="process-btn" onclick="go('slider-download.html')">Process Slider</button>
+  <button class="process-btn" onclick="go('download.html')">Process Multi</button>
 </div>
 </div>
 
-<div class="section">
-<h2>How it works</h2>
+<div id="loader-stage">
+  <div class="spinner">
+    <div class="cyan"></div>
+    <div class="pink"></div>
+  </div>
+  <p style="letter-spacing:2px;font-weight:bold">ANALYZING…</p>
+</div>
+
+</div>
+
+<!-- BENEFITS + FAQ -->
+<div class="extra">
+<h3>Why use this?</h3>
+<div class="card">Fast TikTok downloads</div>
+<div class="card">No watermark</div>
+<div class="card">No login required</div>
+<div class="card">Supports video, profile, story & slider</div>
+
+<h3 style="margin-top:20px">How to use</h3>
 <details>
-  <summary>How do I download?</summary>
-  <p>Copy the TikTok link, paste it above and hit download.</p>
+  <summary>What links can I paste?</summary>
+  <p>Only TikTok links are supported.</p>
 </details>
 <details>
-  <summary>Is it free?</summary>
-  <p>Yes. Unlimited downloads, no cost.</p>
+  <summary>Is this free?</summary>
+  <p>Yes, completely free.</p>
 </details>
 <details>
   <summary>Private accounts?</summary>
-  <p>No. Only public TikTok content works.</p>
+  <p>No, only public TikTok content.</p>
 </details>
 </div>
 
-</div>
-
-<div id="loader">
-  <div class="loader-circle">
-    <div class="c"></div>
-    <div class="p"></div>
-  </div>
-  <p>ANALYZING…</p>
-</div>
-
-</div>
-
 <script>
-let t=0;
-function tabSwitch(i){
-  t=i;
+let tab=0;
+
+function switchTab(i){
+  tab=i;
   document.querySelectorAll('.filter-button').forEach((b,x)=>b.classList.toggle('selected',x===i));
   document.querySelectorAll('.process-btn').forEach((b,x)=>b.classList.toggle('active',x===i));
   input.style.display=i===4?'none':'block';
   multi.style.display=i===4?'block':'none';
+  clearAll();
+}
+
+function toggleBtns(){
+  const v=(tab===4?multi:input).value;
+  paste.style.display=v?'none':'block';
+  clear.style.display=v?'block':'none';
 }
 
 async function paste(){
-  const text=await navigator.clipboard.readText();
-  (t===4?multi:input).value=text;
+  const t=await navigator.clipboard.readText();
+  (tab===4?multi:input).value=t;
+  toggleBtns();
 }
 
-function go(f){
-  const v=(t===4?multi:input).value.trim();
-  if(!v)return alert("Paste link first");
-  ui.style.display='none';
-  loader.style.display='flex';
-  setTimeout(()=>location.href=f+"?links="+encodeURIComponent(v),1400);
+function clearAll(){
+  input.value='';
+  multi.value='';
+  toggleBtns();
+}
+
+function isTikTok(url){
+  return /^(https?:\/\/)?(www\.)?(vm|vt)?\.?tiktok\.com\/.+/i.test(url);
+}
+
+function go(file){
+  const v=(tab===4?multi:input).value.trim();
+  if(!v) return alert("Paste a TikTok link");
+
+  if(tab===4){
+    for(let l of v.split('\n')){
+      if(!isTikTok(l)) return alert("Only TikTok URLs allowed");
+    }
+  }else{
+    if(!isTikTok(v)) return alert("Only TikTok URLs allowed");
+  }
+
+  mainUi.style.display='none';
+  loaderStage.style.display='flex';
+
+  setTimeout(()=>{
+    location.href=file+"?links="+encodeURIComponent(v);
+  },1500);
 }
 
 const input=document.getElementById('input');
 const multi=document.getElementById('multi');
-const ui=document.getElementById('ui');
-const loader=document.getElementById('loader');
+const paste=document.getElementById('paste');
+const clear=document.getElementById('clear');
+const mainUi=document.getElementById('main-ui');
+const loaderStage=document.getElementById('loader-stage');
 </script>
 
 </body>
