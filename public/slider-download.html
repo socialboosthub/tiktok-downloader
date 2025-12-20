@@ -2,88 +2,144 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Slideshow Gallery</title>
+<title>Slideshow Gallery - TikTok Downloader</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-  body { font-family: system-ui, sans-serif; background: #f4f4f4; padding: 15px; text-align: center; margin: 0; }
-  .main-container { max-width: 450px; margin: 0 auto; }
-  
-  /* LOADING BOX STYLE */
+  /* TikTok Aesthetic: Dark Mode */
+  body { 
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+    background: #010101; 
+    color: #ffffff;
+    padding: 15px; 
+    text-align: center; 
+    margin: 0; 
+  }
+
+  .main-container { max-width: 480px; margin: 0 auto; }
+
+  /* COOL TIKTOK LOADING EFFECT */
   #loading-box {
-    background: #fff;
-    padding: 30px;
-    border-radius: 20px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    margin-top: 50px;
+    margin-top: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
-  .spinner {
-    width: 50px;
-    height: 50px;
-    border: 5px solid #f3f3f3;
-    border-top: 5px solid #000;
+  .tiktok-loader {
+    position: relative;
+    width: 60px;
+    height: 60px;
+  }
+
+  .tiktok-loader div {
+    position: absolute;
+    width: 100%;
+    height: 100%;
     border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 20px;
+    opacity: 0.8;
+    mix-blend-mode: screen;
   }
 
-  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  /* TikTok Cyan */
+  .cyan {
+    background-color: #25F4EE;
+    animation: move-cyan 1.5s infinite ease-in-out;
+  }
+
+  /* TikTok Pink/Red */
+  .pink {
+    background-color: #FE2C55;
+    animation: move-pink 1.5s infinite ease-in-out;
+  }
+
+  @keyframes move-cyan {
+    0%, 100% { transform: translateX(-15px); }
+    50% { transform: translateX(15px); }
+  }
+
+  @keyframes move-pink {
+    0%, 100% { transform: translateX(15px); }
+    50% { transform: translateX(-15px); }
+  }
+
+  #loading-text {
+    margin-top: 30px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: #eee;
+    text-transform: uppercase;
+  }
 
   /* GALLERY STYLES */
-  #gallery { display: none; } /* Hidden until loaded */
+  #gallery { display: none; animation: fadeIn 0.5s ease; }
 
-  .photo-card {
-    background: #fff;
-    margin: 20px 0;
-    padding: 12px;
-    border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  }
-
-  .slider-img {
-    width: 100%;
-    height: auto;
-    border-radius: 12px;
-    display: block;
-  }
-
-  .download-btn {
-    margin-top: 12px;
-    padding: 16px;
-    width: 100%;
-    border: none;
-    border-radius: 12px;
-    background: #000;
-    color: #fff;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: transform 0.2s;
-  }
-
-  .download-btn:active { transform: scale(0.98); }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
   .profile-section {
-    background: #fff;
+    background: #121212;
     padding: 15px;
     border-radius: 16px;
     text-align: left;
     display: flex;
     align-items: center;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
+    border: 1px solid #222;
   }
 
-  .avatar { width: 48px; height: 48px; border-radius: 50%; margin-right: 12px; border: 2px solid #eee; }
+  .avatar { width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; border: 2px solid #FE2C55; }
   .username { font-weight: 700; font-size: 18px; }
+
+  .photo-card {
+    background: #121212;
+    margin-bottom: 25px;
+    padding: 12px;
+    border-radius: 20px;
+    border: 1px solid #222;
+  }
+
+  .slider-img {
+    width: 100%;
+    height: auto;
+    border-radius: 14px;
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  .download-btn {
+    padding: 16px;
+    width: 100%;
+    border: none;
+    border-radius: 12px;
+    /* TikTok Gradient */
+    background: linear-gradient(45deg, #FE2C55 0%, #25F4EE 100%);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+
+  .download-btn:active { transform: scale(0.96); }
+
+  .caption {
+    font-size: 14px;
+    color: #ccc;
+    text-align: left;
+    margin: 0 5px 15px 5px;
+    line-height: 1.4;
+  }
 </style>
 </head>
 <body>
 
 <div class="main-container">
   <div id="loading-box">
-    <div class="spinner"></div>
-    <h3 style="margin:0;">Processing Link...</h3>
-    <p style="color: #666; font-size: 14px;">Getting your images ready</p>
+    <div class="tiktok-loader">
+      <div class="cyan"></div>
+      <div class="pink"></div>
+    </div>
+    <div id="loading-text">Analyzing Slideshow...</div>
   </div>
 
   <div id="gallery"></div>
@@ -91,28 +147,31 @@
 
 <script>
 async function loadSliders() {
-  const params = new URLSearchParams(location.search);
+  const params = new URLSearchParams(window.location.search);
   const rawLinks = params.get("links");
   const gallery = document.getElementById("gallery");
   const loadingBox = document.getElementById("loading-box");
 
   if (!rawLinks) {
-    loadingBox.innerHTML = "<h3>No links provided</h3>";
+    loadingBox.innerHTML = "<h3>No links found.</h3>";
     return;
   }
 
   const links = rawLinks.split("\n").map(l => l.trim()).filter(Boolean);
 
   try {
-    // Process each link
     for (const link of links) {
+      // 1. Fetch data from your combined server API
       const res = await fetch(`/api?url=${encodeURIComponent(link)}`);
       const json = await res.json();
       const data = json.data;
 
-      if (!data || !data.images) continue;
+      if (!data || !data.images) {
+        console.warn("Skipping link: No images found.");
+        continue;
+      }
 
-      // Create Profile Header
+      // 2. Profile Header
       const header = document.createElement("div");
       header.className = "profile-section";
       header.innerHTML = `
@@ -121,35 +180,46 @@ async function loadSliders() {
       `;
       gallery.appendChild(header);
 
-      // Create Photo Cards
+      // 3. Caption
+      if (data.title) {
+        const caption = document.createElement("div");
+        caption.className = "caption";
+        caption.textContent = data.title;
+        gallery.appendChild(caption);
+      }
+
+      // 4. Generate individual Photo Cards
       const videoId = data.id || Date.now();
+      
       data.images.forEach((imgUrl, i) => {
         const photoCard = document.createElement("div");
         photoCard.className = "photo-card";
         
+        // Proxy URL to force download
         const fileName = `tiktok_${videoId}_${i + 1}`;
         const downloadUrl = `/image?url=${encodeURIComponent(imgUrl)}&name=${fileName}`;
 
         photoCard.innerHTML = `
-          <img class="slider-img" src="${imgUrl}">
+          <img class="slider-img" src="${imgUrl}" loading="lazy">
           <button class="download-btn" onclick="window.location.href='${downloadUrl}'">
-            Download Photo ${i + 1}
+            DOWNLOAD PHOTO ${i + 1}
           </button>
         `;
         gallery.appendChild(photoCard);
       });
     }
 
-    // FINISHED: Hide loading, show gallery
+    // Finished Loading
     loadingBox.style.display = "none";
     gallery.style.display = "block";
 
   } catch (err) {
-    loadingBox.innerHTML = "<h3>Error loading images</h3><p>Please check your connection.</p>";
+    console.error(err);
+    document.getElementById("loading-text").textContent = "Error: Check your server connection.";
   }
 }
 
-// Auto-run on page load
+// Start the process
 loadSliders();
 </script>
 
