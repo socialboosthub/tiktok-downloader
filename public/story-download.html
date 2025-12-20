@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Preparing Downloads</title>
+  <title>Preparing Video Downloads</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <style>
@@ -15,31 +15,48 @@
     }
 
     h3 {
-      margin-bottom: 10px;
+      margin-top: 20px;
+      color: #333;
     }
 
     .card {
       background: #fff;
       max-width: 420px;
-      margin: 15px auto;
+      margin: 20px auto;
       padding: 15px;
-      border-radius: 12px;
+      border-radius: 14px;
       box-shadow: 0 6px 18px rgba(0,0,0,0.08);
       text-align: left;
     }
 
-    .thumb {
+    /* MATCHING SLIDER SIZE: 240px */
+    .thumb-container {
       width: 100%;
-      height: 220px;
-      border-radius: 10px;
-      background: linear-gradient(
-        90deg,
-        #eee 25%,
-        #ddd 37%,
-        #eee 63%
-      );
+      height: 240px; 
+      border-radius: 12px;
+      overflow: hidden;
+      background: #ddd;
+      position: relative;
+    }
+
+    /* Placeholder Shimmer Effect */
+    .thumb-placeholder {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, #eee 25%, #ddd 37%, #eee 63%);
       background-size: 400% 100%;
       animation: shimmer 1.4s infinite;
+    }
+
+    /* Video Cover - Set to object-fit: cover for consistent sizing */
+    .video-thumb {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
     }
 
     @keyframes shimmer {
@@ -47,54 +64,58 @@
       100% { background-position: -100% 0 }
     }
 
-    img.video-thumb {
-      width: 100%;
-      border-radius: 10px;
-      display: none;
-      margin-top: 8px;
-    }
-
     .user {
       display: flex;
       align-items: center;
-      margin-top: 10px;
+      margin-top: 12px;
     }
 
     .avatar {
-      width: 36px;
-      height: 36px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
       object-fit: cover;
-      margin-right: 8px;
+      margin-right: 10px;
       background: #ddd;
     }
 
     .username {
       font-weight: 600;
-      font-size: 14px;
+      font-size: 15px;
     }
 
     .caption {
       font-size: 13px;
       color: #555;
-      margin-top: 4px;
+      margin-top: 6px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
 
     .status {
       font-size: 13px;
       color: #777;
-      margin-top: 8px;
+      margin-top: 10px;
     }
 
     button {
-      margin-top: 12px;
-      padding: 12px 20px;
+      margin-top: 14px;
+      padding: 14px;
+      width: 100%;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       background: #000;
       color: #fff;
       font-size: 15px;
-      width: 100%;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    button:active {
+      opacity: 0.8;
     }
   </style>
 </head>
@@ -120,112 +141,83 @@ const links = rawLinks
 
 const list = document.getElementById("list");
 
-/* STEP 1: CREATE ALL CARDS */
+/* STEP 1: CREATE CARDS IMMEDIATELY */
 const cards = links.map((_, i) => {
   const card = document.createElement("div");
   card.className = "card";
 
   card.innerHTML = `
-    <div class="thumb"></div>
-    <img class="video-thumb">
+    <div class="thumb-container">
+      <div class="thumb-placeholder"></div>
+      <img class="video-thumb">
+    </div>
     <div class="user">
       <img class="avatar">
-      <div class="username"></div>
+      <div class="username">Loading...</div>
     </div>
     <div class="caption"></div>
-    <div class="status">Loading video ${i + 1} of ${links.length}…</div>
+    <div class="status">Waiting to load video ${i + 1}...</div>
   `;
 
   list.appendChild(card);
   return card;
 });
 
-/* STEP 2: LOAD VIDEOS ONE BY ONE */
-function loadVideo(index) {
+/* STEP 2: LOAD VIDEOS SEQUENTIALLY */
+async function loadVideo(index) {
   if (index >= links.length) return;
 
   const card = cards[index];
-  const thumb = card.querySelector(".thumb");
+  const placeholder = card.querySelector(".thumb-placeholder");
   const videoImg = card.querySelector(".video-thumb");
   const avatar = card.querySelector(".avatar");
   const usernameEl = card.querySelector(".username");
   const captionEl = card.querySelector(".caption");
   const status = card.querySelector(".status");
 
-  let attempts = 0;
-  const MAX_ATTEMPTS = 3;
+  status.textContent = `Fetching video data...`;
 
-  async function tryLoad() {
-    attempts++;
-    status.textContent =
-      `Loading video ${index + 1} of ${links.length} (attempt ${attempts})…`;
+  try {
+    const res = await fetch(`/api?url=${encodeURIComponent(links[index])}`);
+    if (!res.ok) throw new Error("API error");
 
-    try {
-      const res = await fetch(
-        `/api?url=${encodeURIComponent(links[index])}`
-      );
+    const json = await res.json();
+    const data = json.data;
 
-      if (!res.ok) throw new Error("API blocked");
+    // Load Thumbnail
+    videoImg.src = data.origin_cover || data.cover;
+    videoImg.onload = () => {
+      placeholder.style.display = "none";
+      videoImg.style.display = "block";
+    };
 
-      const json = await res.json();
-      const data = json.data;
+    // Profile Data
+    avatar.src = data.author?.avatar || data.author?.avatar_thumb || "";
+    usernameEl.textContent = "@" + (data.author?.unique_id || "tiktok_user");
+    captionEl.textContent = data.title || "No caption";
 
-      // Thumbnail
-      videoImg.src = data.origin_cover || data.cover;
-      videoImg.onload = () => {
-        thumb.remove();
-        videoImg.style.display = "block";
-      };
+    // UNIQUE FILENAME (Matches your slider logic)
+    const videoId = data.id || Date.now();
 
-      // Profile picture
-      avatar.src =
-        data.author?.avatar || data.author?.avatar_thumb || "";
+    const btn = document.createElement("button");
+    btn.textContent = "Download Video";
+    btn.onclick = () => {
+      window.location.href = `/download?url=${encodeURIComponent(data.play)}&name=tiktok_${videoId}`;
+    };
 
-      // Username
-      const username =
-        data.author?.unique_id ||
-        data.author?.nickname ||
-        "Unknown user";
-      usernameEl.textContent = "@" + username;
+    status.textContent = "Ready";
+    card.appendChild(btn);
 
-      // Caption
-      captionEl.textContent =
-        data.title || "No caption available";
+    // Wait 1.2 seconds before loading the next card to be safe
+    setTimeout(() => loadVideo(index + 1), 1200);
 
-// Download button
-const btn = document.createElement("button");
-btn.textContent = "Download Video";
-
-const videoId =
-  data.id ||
-  Date.now() + "_" + Math.floor(Math.random() * 1e9);
-
-btn.onclick = () => {
-  location.href =
-    `/download?url=${encodeURIComponent(data.play)}&name=tiktok_${videoId}`;
-};
-
-      status.textContent = "Ready to download";
-      card.appendChild(btn);
-
-      setTimeout(() => loadVideo(index + 1), 1200);
-      return;
-
-    } catch (e) {
-      if (attempts >= MAX_ATTEMPTS) {
-        status.textContent =
-          "Could not connect to TikTok server";
-        setTimeout(() => loadVideo(index + 1), 1200);
-      } else {
-        setTimeout(tryLoad, 1500);
-      }
-    }
+  } catch (err) {
+    status.textContent = "Failed to load this video";
+    setTimeout(() => loadVideo(index + 1), 1000);
   }
-
-  tryLoad();
 }
 
-/* START */
+// Start loading the first video
 loadVideo(0);
 </script>
 
