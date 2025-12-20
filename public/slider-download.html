@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Slideshow Gallery - TikTok Downloader</title>
+<title>TikTok Slideshow Downloader</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-  /* TikTok Aesthetic: Dark Mode */
+  /* TikTok Dark Aesthetic */
   body { 
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+    font-family: 'Segoe UI', sans-serif; 
     background: #010101; 
     color: #ffffff;
     padding: 15px; 
@@ -15,23 +15,72 @@
     margin: 0; 
   }
 
-  .main-container { max-width: 480px; margin: 0 auto; }
+  .main-container { max-width: 480px; margin: 0 auto; padding-top: 50px; }
 
-  /* COOL TIKTOK LOADING EFFECT */
-  #loading-box {
-    margin-top: 120px;
+  /* THE GLOWING BUTTON */
+  .process-wrapper {
+    position: relative;
+    padding: 3px; /* Space for the glow */
+    border-radius: 15px;
+    display: inline-block;
+    width: 100%;
+    background: #121212;
+    z-index: 1;
+  }
+
+  /* The Glowing Border Effect */
+  .process-wrapper::after {
+    content: '';
+    position: absolute;
+    top: -2px; left: -2px; right: -2px; bottom: -2px;
+    background: linear-gradient(45deg, #FE2C55, #25F4EE, #FE2C55, #25F4EE);
+    background-size: 400%;
+    z-index: -1;
+    filter: blur(8px);
+    border-radius: 16px;
+    animation: glowing 8s linear infinite;
+    opacity: 1;
+  }
+
+  @keyframes glowing {
+    0% { background-position: 0 0; }
+    50% { background-position: 400% 0; }
+    100% { background-position: 0 0; }
+  }
+
+  button#process-btn {
+    width: 100%;
+    padding: 16px;
+    background: #121212;
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
     display: flex;
-    flex-direction: column;
+    justify-content: center;
     align-items: center;
   }
 
-  .tiktok-loader {
+  /* IN-PAGE LOADER (TikTok Colors) */
+  .loader-content {
+    display: none; /* Hidden by default */
+    flex-direction: column;
+    align-items: center;
+    margin-top: 50px;
+    animation: fadeIn 0.5s ease;
+  }
+
+  .tiktok-spinner {
     position: relative;
     width: 60px;
     height: 60px;
   }
 
-  .tiktok-loader div {
+  .tiktok-spinner div {
     position: absolute;
     width: 100%;
     height: 100%;
@@ -40,187 +89,109 @@
     mix-blend-mode: screen;
   }
 
-  /* TikTok Cyan */
-  .cyan {
-    background-color: #25F4EE;
-    animation: move-cyan 1.5s infinite ease-in-out;
-  }
+  .cyan { background-color: #25F4EE; animation: move-cyan 1.5s infinite ease-in-out; }
+  .pink { background-color: #FE2C55; animation: move-pink 1.5s infinite ease-in-out; animation-delay: -0.75s; }
 
-  /* TikTok Pink/Red */
-  .pink {
-    background-color: #FE2C55;
-    animation: move-pink 1.5s infinite ease-in-out;
-  }
+  @keyframes move-cyan { 0%, 100% { transform: translateX(-20px); } 50% { transform: translateX(20px); } }
+  @keyframes move-pink { 0%, 100% { transform: translateX(20px); } 50% { transform: translateX(-20px); } }
 
-  @keyframes move-cyan {
-    0%, 100% { transform: translateX(-15px); }
-    50% { transform: translateX(15px); }
-  }
-
-  @keyframes move-pink {
-    0%, 100% { transform: translateX(15px); }
-    50% { transform: translateX(-15px); }
-  }
-
-  #loading-text {
-    margin-top: 30px;
-    font-size: 14px;
-    font-weight: 600;
-    letter-spacing: 2px;
-    color: #eee;
-    text-transform: uppercase;
-  }
-
-  /* GALLERY STYLES */
-  #gallery { display: none; animation: fadeIn 0.5s ease; }
-
-  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-  .profile-section {
-    background: #121212;
-    padding: 15px;
-    border-radius: 16px;
-    text-align: left;
-    display: flex;
-    align-items: center;
-    margin-bottom: 20px;
-    border: 1px solid #222;
-  }
-
-  .avatar { width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; border: 2px solid #FE2C55; }
-  .username { font-weight: 700; font-size: 18px; }
-
+  /* GALLERY CONTAINER */
+  #gallery { display: none; margin-top: 20px; text-align: left; }
+  
   .photo-card {
     background: #121212;
-    margin-bottom: 25px;
-    padding: 12px;
-    border-radius: 20px;
     border: 1px solid #222;
+    border-radius: 20px;
+    padding: 12px;
+    margin-bottom: 20px;
   }
 
-  .slider-img {
-    width: 100%;
-    height: auto;
-    border-radius: 14px;
-    display: block;
-    margin-bottom: 12px;
-  }
-
+  .slider-img { width: 100%; border-radius: 14px; margin-bottom: 12px; }
+  
   .download-btn {
-    padding: 16px;
     width: 100%;
+    padding: 14px;
+    border-radius: 10px;
     border: none;
-    border-radius: 12px;
-    /* TikTok Gradient */
-    background: linear-gradient(45deg, #FE2C55 0%, #25F4EE 100%);
-    color: #fff;
-    font-size: 16px;
-    font-weight: 800;
+    background: linear-gradient(45deg, #FE2C55, #25F4EE);
+    color: white;
+    font-weight: bold;
     cursor: pointer;
-    transition: transform 0.1s;
   }
 
-  .download-btn:active { transform: scale(0.96); }
-
-  .caption {
-    font-size: 14px;
-    color: #ccc;
-    text-align: left;
-    margin: 0 5px 15px 5px;
-    line-height: 1.4;
-  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 </style>
 </head>
 <body>
 
 <div class="main-container">
-  <div id="loading-box">
-    <div class="tiktok-loader">
+  <div id="input-stage">
+    <div class="process-wrapper">
+      <button id="process-btn" onclick="startProcessing()">Process Links</button>
+    </div>
+  </div>
+
+  <div id="loader-stage" class="loader-content">
+    <div class="tiktok-spinner">
       <div class="cyan"></div>
       <div class="pink"></div>
     </div>
-    <div id="loading-text">Analyzing Slideshow...</div>
+    <p style="margin-top: 30px; letter-spacing: 2px;">SUCCESS! LOADING CONTENT...</p>
   </div>
 
   <div id="gallery"></div>
 </div>
 
 <script>
-async function loadSliders() {
+async function startProcessing() {
   const params = new URLSearchParams(window.location.search);
   const rawLinks = params.get("links");
-  const gallery = document.getElementById("gallery");
-  const loadingBox = document.getElementById("loading-box");
-
+  
   if (!rawLinks) {
-    loadingBox.innerHTML = "<h3>No links found.</h3>";
+    alert("No links to process!");
     return;
   }
 
+  // 1. Switch UI to Loading
+  document.getElementById("input-stage").style.display = "none";
+  document.getElementById("loader-stage").style.display = "flex";
+
   const links = rawLinks.split("\n").map(l => l.trim()).filter(Boolean);
+  const gallery = document.getElementById("gallery");
 
   try {
     for (const link of links) {
-      // 1. Fetch data from your combined server API
       const res = await fetch(`/api?url=${encodeURIComponent(link)}`);
       const json = await res.json();
       const data = json.data;
 
-      if (!data || !data.images) {
-        console.warn("Skipping link: No images found.");
-        continue;
-      }
+      if (!data || !data.images) continue;
 
-      // 2. Profile Header
-      const header = document.createElement("div");
-      header.className = "profile-section";
-      header.innerHTML = `
-        <img class="avatar" src="${data.author?.avatar || ''}">
-        <div class="username">@${data.author?.unique_id || 'user'}</div>
-      `;
-      gallery.appendChild(header);
-
-      // 3. Caption
-      if (data.title) {
-        const caption = document.createElement("div");
-        caption.className = "caption";
-        caption.textContent = data.title;
-        gallery.appendChild(caption);
-      }
-
-      // 4. Generate individual Photo Cards
+      // Build individual photo cards
       const videoId = data.id || Date.now();
-      
       data.images.forEach((imgUrl, i) => {
-        const photoCard = document.createElement("div");
-        photoCard.className = "photo-card";
+        const card = document.createElement("div");
+        card.className = "photo-card";
+        const dlUrl = `/image?url=${encodeURIComponent(imgUrl)}&name=tiktok_${videoId}_${i+1}`;
         
-        // Proxy URL to force download
-        const fileName = `tiktok_${videoId}_${i + 1}`;
-        const downloadUrl = `/image?url=${encodeURIComponent(imgUrl)}&name=${fileName}`;
-
-        photoCard.innerHTML = `
-          <img class="slider-img" src="${imgUrl}" loading="lazy">
-          <button class="download-btn" onclick="window.location.href='${downloadUrl}'">
-            DOWNLOAD PHOTO ${i + 1}
-          </button>
+        card.innerHTML = `
+          <img class="slider-img" src="${imgUrl}">
+          <button class="download-btn" onclick="window.location.href='${dlUrl}'">DOWNLOAD PHOTO ${i+1}</button>
         `;
-        gallery.appendChild(photoCard);
+        gallery.appendChild(card);
       });
     }
 
-    // Finished Loading
-    loadingBox.style.display = "none";
+    // 2. Switch UI to Gallery
+    document.getElementById("loader-stage").style.display = "none";
     gallery.style.display = "block";
 
   } catch (err) {
-    console.error(err);
-    document.getElementById("loading-text").textContent = "Error: Check your server connection.";
+    alert("Error loading content. Check server.");
+    document.getElementById("input-stage").style.display = "block";
+    document.getElementById("loader-stage").style.display = "none";
   }
 }
-
-// Start the process
-loadSliders();
 </script>
 
 </body>
