@@ -93,13 +93,9 @@ app.get("/image", async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
 /**
  * 1.1 VIDEO QUALITY INFO (HD + NORMAL)
- * Returns direct links for both qualities
+ * Returns direct links for both qualities with fallback
  */
 app.get("/video", async (req, res) => {
   try {
@@ -114,14 +110,22 @@ app.get("/video", async (req, res) => {
       return res.status(400).json({ error: "Not a video post" });
     }
 
+    // If hdplay is missing, fallback to normal
+    const hdLink = data.hdplay || data.play;
+
     res.json({
       author: data.author,
       caption: data.title,
       thumbnail: data.cover,
-      normal: data.play,      // SD / Normal quality
-      hd: data.hdplay || null // HD / No watermark
+      normal: data.play, // SD / Normal quality
+      hd: hdLink       // HD / fallback to normal if not available
     });
   } catch (err) {
     res.status(500).json({ error: "Video info fetch failed" });
   }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
