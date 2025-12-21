@@ -97,3 +97,31 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
+/**
+ * 1.1 VIDEO QUALITY INFO (HD + NORMAL)
+ * Returns direct links for both qualities
+ */
+app.get("/video", async (req, res) => {
+  try {
+    const url = req.query.url;
+    if (!url) return res.status(400).json({ error: "No URL provided" });
+
+    const r = await fetch(`https://tikwm.com/api/?url=${encodeURIComponent(url)}`);
+    const j = await r.json();
+    const data = j.data;
+
+    if (!data?.play) {
+      return res.status(400).json({ error: "Not a video post" });
+    }
+
+    res.json({
+      author: data.author,
+      caption: data.title,
+      thumbnail: data.cover,
+      normal: data.play,      // SD / Normal quality
+      hd: data.hdplay || null // HD / No watermark
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Video info fetch failed" });
+  }
+});
