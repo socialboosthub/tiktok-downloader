@@ -199,14 +199,27 @@ async function loadVideo(index) {
     // UNIQUE FILENAME (Matches your slider logic)
     const videoId = data.id || Date.now();
 
-    const btn = document.createElement("button");
-    btn.textContent = "Download Video";
-    btn.onclick = () => {
-      window.location.href = `/download?url=${encodeURIComponent(data.play)}&name=tiktok_${videoId}`;
-    };
+  // Normal quality button
+const btn = document.createElement("button");
+btn.textContent = "Download Video";
+btn.onclick = () => {
+  window.location.href = `/download?url=${encodeURIComponent(data.play)}&name=tiktok_${videoId}_normal`;
+};
+card.appendChild(btn);
 
-    status.textContent = "Ready";
-    card.appendChild(btn);
+// HD quality button (always below)
+const hdBtn = document.createElement("button");
+hdBtn.textContent = "Download HD";
+hdBtn.onclick = () => {
+  if (!data.hdplay) {
+    alert("HD quality not available for this video");
+    return;
+  }
+  window.location.href = `/download?url=${encodeURIComponent(data.hdplay)}&name=tiktok_${videoId}_hd`;
+};
+card.appendChild(hdBtn);
+
+status.textContent = "Ready";
 
     // Wait 1.2 seconds before loading the next card to be safe
     setTimeout(() => loadVideo(index + 1), 1200);
