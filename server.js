@@ -9,6 +9,7 @@ app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "index.html"));
 });
 
+// PROXY API: Requests video & audio data
 app.get("/api", async (req, res) => {
     try {
         const url = req.query.url;
@@ -26,6 +27,22 @@ app.get("/api", async (req, res) => {
     }
 });
 
+// MP3 DOWNLOAD PROXY
+app.get("/mp3", async (req, res) => {
+    try {
+        const audioUrl = req.query.url;
+        const fileName = req.query.name || "tiktok_audio";
+        const response = await fetch(audioUrl);
+        
+        res.setHeader("Content-Disposition", `attachment; filename="${fileName}.mp3"`);
+        res.setHeader("Content-Type", "audio/mpeg");
+        response.body.pipe(res);
+    } catch (err) {
+        res.status(500).send("Audio download failed");
+    }
+});
+
+// KEEP YOUR EXISTING /download ROUTE HERE FOR VIDEOS...
 app.get("/download", async (req, res) => {
     try {
         const videoUrl = req.query.url;
