@@ -14,17 +14,18 @@
     overflow-x: auto; 
     scroll-snap-type: x mandatory; 
     gap: 15px; 
-    padding-bottom: 20px;
-    scrollbar-width: none; /* Hide scrollbar for Firefox */
+    padding: 10px 0 20px 0;
+    scrollbar-width: none; 
+    -webkit-overflow-scrolling: touch;
   }
-  #gallery::-webkit-scrollbar { display: none; } /* Hide scrollbar for Chrome/Safari */
+  #gallery::-webkit-scrollbar { display: none; }
 
   .photo-card { 
     background: #121212; 
     border: 1px solid #222; 
     border-radius: 20px; 
     padding: 12px; 
-    flex: 0 0 90%; /* Shows 90% of the card so the next one peaks out */
+    flex: 0 0 85%; /* Sized so the next card is slightly visible */
     scroll-snap-align: center;
     box-sizing: border-box;
   }
@@ -33,9 +34,9 @@
   
   .download-btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; color: white; margin-top: 5px; }
   .individual-btn { background: linear-gradient(45deg, #EE1D52, #25F4EE); }
-  .all-btn { background: white; color: black; margin: 0 auto 20px auto; font-size: 16px; display: block; max-width: 480px; }
+  .all-btn { background: white; color: black; margin: 0 auto 20px auto; font-size: 16px; display: block; width: 100%; }
 
-  /* Loader Styles */
+  /* Loader */
   #loader-box { margin-top: 100px; display: flex; flex-direction: column; align-items: center; }
   .tiktok-spinner { position: relative; width: 60px; height: 60px; margin-bottom: 20px; }
   .tiktok-spinner div { position: absolute; width: 100%; height: 100%; border-radius: 50%; opacity: 0.8; mix-blend-mode: screen; }
@@ -55,11 +56,29 @@
 
   <button class="download-btn all-btn" id="dl-all-btn" style="display:none">DOWNLOAD ALL IMAGES</button>
   
-  <div id="gallery" style="display:none">
-    </div>
+  <div id="gallery" style="display:none"></div>
 </div>
 
 <script>
+// Function to handle the actual file download
+async function downloadFile(url, filename) {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(blobUrl);
+  } catch (err) {
+    // Fallback if blob fetch fails
+    window.location.href = url;
+  }
+}
+
 async function load() {
   const links = new URLSearchParams(window.location.search).get("links");
   if (!links) return;
@@ -74,27 +93,33 @@ async function load() {
     const gallery = document.getElementById("gallery");
     const dlAllBtn = document.getElementById('dl-all-btn');
     
+    // Download All logic
     dlAllBtn.onclick = async () => {
       for (let i = 0; i < data.images.length; i++) {
-        const a = document.createElement('a');
-        a.href = `/image?url=${encodeURIComponent(data.images[i])}&name=tiktok_${data.id}_${i+1}`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        await new Promise(r => setTimeout(r, 1000));
+        const fileName = `tiktok_${data.id}_${i+1}.jpg`;
+        const downloadUrl = `/image?url=${encodeURIComponent(data.images[i])}&name=tiktok_${data.id}_${i+1}`;
+        await downloadFile(downloadUrl, fileName);
+        await new Promise(r => setTimeout(r, 800)); // Short delay
       }
     };
 
     data.images.forEach((img, i) => {
       const card = document.createElement("div");
       card.className = "photo-card";
+      
+      const fileName = `tiktok_${data.id}_${i+1}.jpg`;
+      const downloadUrl = `/image?url=${encodeURIComponent(img)}&name=tiktok_${data.id}_${i+1}`;
+      
       card.innerHTML = `
         <img class="slider-img" src="${img}">
-        <button class="download-btn individual-btn" onclick="window.location.href='/image?url=${encodeURIComponent(img)}&name=tiktok_${data.id}_${i+1}'">
+        <button class="download-btn individual-btn" id="btn-${i}">
           DOWNLOAD PHOTO ${i+1}
         </button>
       `;
       gallery.appendChild(card);
+      
+      // Individual button click listener
+      document.getElementById(`btn-${i}`).onclick = () => downloadFile(downloadUrl, fileName);
     });
 
     document.getElementById("loader-box").style.display = "none";
