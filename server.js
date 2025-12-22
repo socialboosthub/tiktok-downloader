@@ -53,26 +53,36 @@ app.get("/download", async (req, res) => {
     }
 });
 
-// ✅ IMAGE DOWNLOAD (MUST BE BEFORE listen)
+// IMAGE DOWNLOAD PROXY
 app.get("/image", async (req, res) => {
     try {
         const imageUrl = req.query.url;
-        const fileName = req.query.name || "tiktok_image";
+        if (!imageUrl) {
+            return res.status(400).send("No image URL provided");
+        }
 
-        if (!imageUrl) return res.status(400).send("No image URL");
+        // ✅ Generate unique Tiksave filename
+        const uniqueNumber = Date.now() + Math.floor(Math.random() * 1000);
+        const fileName = `Tiksave_${uniqueNumber}.jpg`;
 
         const response = await fetch(imageUrl, {
-            headers: { "User-Agent": "Mozilla/5.0" }
+            headers: {
+                "User-Agent": "Mozilla/5.0"
+            }
         });
 
-        res.setHeader("Content-Disposition", `attachment; filename="${fileName}.jpg"`);
+        res.setHeader(
+            "Content-Disposition",
+            `attachment; filename="${fileName}"`
+        );
         res.setHeader("Content-Type", "image/jpeg");
+
         response.body.pipe(res);
     } catch (err) {
+        console.error(err);
         res.status(500).send("Image download failed");
     }
 });
-
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Running on http://localhost:${PORT}`);
