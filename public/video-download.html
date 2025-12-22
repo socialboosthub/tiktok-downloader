@@ -4,8 +4,24 @@
   <meta charset="UTF-8">
   <title>TikTok Video Downloader</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  
   <style>
-    body { font-family: system-ui, sans-serif; background: #000; text-align: center; padding: 20px; margin: 0; color: white; }
+    /* ================= CORE STYLES (Existing) ================= */
+    body { 
+        font-family: system-ui, sans-serif; 
+        background: #000; 
+        text-align: center; 
+        padding: 0; /* Changed to 0 to fit Nav sticky positioning */
+        margin: 0; 
+        color: white; 
+    }
+    
+    /* Container for the downloader content to keep padding */
+    .main-content {
+        padding: 20px;
+        min-height: 60vh; /* Ensures footer stays down if content is short */
+    }
+
     #list { display: flex; flex-direction: column; align-items: center; }
     .card { background: #fff; width: 100%; max-width: 400px; margin: 10px 0; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: left; display: none; }
     .thumb-container { width: 100%; height: 220px; border-radius: 10px; background: #eee; overflow: hidden; }
@@ -18,8 +34,6 @@
     button { padding: 14px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 14px; width: 100%; }
     .btn-normal { background: #000; color: #fff; }
     .btn-hd { background: #27ae60; color: #fff; display: none; }
-    
-    /* Style for the new home button */
     .btn-home { background: #eee; color: #000; }
 
     /* --- LOADING ANIMATION STYLES --- */
@@ -36,22 +50,247 @@
     }
     .loader-text { margin-top: 25px; font-size: 11px; letter-spacing: 4px; color: #fff; font-weight: bold; text-transform: uppercase; animation: fade-blink 1s infinite; }
     @keyframes fade-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    /* ================= NAVBAR STYLES ================= */
+    .fcc-nav {
+      background: #0a0a23;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      position: sticky;
+      top: 0;
+      z-index: 10000;
+    }
+
+    .fcc-logo {
+      background: linear-gradient(to bottom right, #EE1D52, #25F4EE);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: bold;
+      font-size: 18px;
+      text-decoration: none;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .menu-toggle {
+      background: #3b3b4f;
+      border: 1px solid #ffffff;
+      color: #ffffff;
+      padding: 5px 10px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    /* ================= THEME TOGGLE ================= */
+    .theme-icon {
+      cursor: pointer;
+      font-size: 20px;
+      transition: 0.3s;
+      color: #ffffff;
+    }
+
+    /* ================= SIDE MENU ================= */
+    .side-menu {
+      position: fixed;
+      top: 50px;
+      right: -100%;
+      width: 250px;
+      height: calc(100vh - 50px);
+      background: #0a0a23;
+      transition: 0.4s ease;
+      z-index: 9999;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      border-left: 1px solid #3b3b4f;
+      text-align: left; /* Ensure menu text aligns left */
+      box-sizing: border-box; /* Fix padding issues */
+    }
+
+    .side-menu.open {
+      right: 0;
+    }
+
+    .side-menu a {
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 18px;
+      border-bottom: 1px solid #3b3b4f;
+      padding-bottom: 10px;
+    }
+
+    /* ================= LIGHT MODE ================= */
+    body.light-mode {
+      background: #f5f5f7;
+      color: #000;
+    }
+
+    body.light-mode .fcc-nav,
+    body.light-mode .side-menu {
+      background: #ffffff;
+    }
+
+    body.light-mode .menu-toggle {
+      background: #e5e5e5;
+      color: #000;
+      border-color: #000;
+    }
+
+    body.light-mode .side-menu a {
+      color: #000;
+      border-color: #ddd;
+    }
+    
+    body.light-mode .theme-icon {
+        color: #000;
+    }
+    
+    /* Make loader text visible in light mode */
+    body.light-mode .loader-text {
+        color: #000;
+    }
+
+    /* ================= FOOTER STYLES ================= */
+    .footer {
+      padding: 60px 6% 30px;
+      background: #EE1D52;
+      border-radius: 12px;
+      margin-top: 80px;
+      text-align: left; /* Override body center alignment for footer content */
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 30px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .footer h3,
+    .footer h4 {
+      margin-bottom: 12px;
+      color: #000000;
+      font-weight: 700;
+    }
+
+    .footer p {
+      color: #000000;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .footer a {
+      color: #000000;
+      font-size: 14px;
+      text-decoration: none;
+      display: block;
+      margin-bottom: 8px;
+      transition: 0.3s;
+    }
+
+    .footer a:hover {
+      color: #ffffff;
+      transform: translateX(4px);
+    }
+
+    .footer-bottom {
+      margin-top: 40px;
+      text-align: center;
+      font-size: 13px;
+      color: #111111;
+      border-top: 1px solid rgba(0,0,0,0.2);
+      padding-top: 20px;
+    }
+
+    @media (max-width: 600px) {
+      .footer {
+        padding: 40px 20px 25px;
+        border-radius: 0;
+      }
+    }
   </style>
 </head>
 <body>
 
-  <div id="loader-stage">
-      <div class="neon-loader">
-          <div class="neon-ring ring-1"></div>
-          <div class="neon-ring ring-2"></div>
-          <div class="neon-ring ring-3"></div>
-      </div>
-      <p class="loader-text">Analyzing</p>
+  <nav class="fcc-nav">
+    <a href="#" class="fcc-logo">TikSave</a>
+
+    <div class="nav-right">
+      <span class="theme-icon" id="theme-icon" onclick="toggleTheme()">🌙</span>
+      <button class="menu-toggle" onclick="toggleMenu()">Menu ☰</button>
+    </div>
+  </nav>
+
+  <div class="side-menu" id="side-menu">
+    <a href="#">Curriculum</a>
+    <a href="#">Profile</a>
+    <a href="#">Settings</a>
+    <a href="#">Forum</a>
+    <a href="#">News</a>
   </div>
 
-  <div id="list"></div>
+  <div class="main-content">
+      <div id="loader-stage">
+          <div class="neon-loader">
+              <div class="neon-ring ring-1"></div>
+              <div class="neon-ring ring-2"></div>
+              <div class="neon-ring ring-3"></div>
+          </div>
+          <p class="loader-text">Analyzing</p>
+      </div>
+
+      <div id="list"></div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-grid">
+      <div>
+        <h3>TikSave</h3>
+        <p>Fast and simple TikTok downloader</p>
+        <p>with no watermark.</p>
+      </div>
+      <div>
+        <h4>Tools</h4>
+        <a href="./instagram.html">Instagram Downloader</a>
+        <a href="./youtube.html">YouTube Downloader</a>
+        <a href="./facebook.html">Facebook Downloader</a>
+        <a href="./twitter.html">Twitter Downloader</a>
+      </div>
+      <div>
+        <h4>Legal</h4>
+        <a href="./privacy.html">Privacy Policy</a>
+        <a href="./terms.html">Terms of Service</a>
+        <a href="./dmca.html">DMCA</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © 2025 TikSave. All rights reserved.
+    </div>
+  </footer>
 
   <script>
+    /* --- THEME & MENU LOGIC --- */
+    function toggleMenu() {
+      document.getElementById('side-menu').classList.toggle('open');
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle('light-mode');
+      document.getElementById('theme-icon').textContent =
+        document.body.classList.contains('light-mode') ? "☀️" : "🌙";
+    }
+
+    /* --- DOWNLOADER LOGIC --- */
     const params = new URLSearchParams(location.search);
     const links = (params.get("links") || "").split("\n").filter(l => l.trim());
     const list = document.getElementById("list");
@@ -106,3 +345,4 @@
   </script>
 </body>
 </html>
+
