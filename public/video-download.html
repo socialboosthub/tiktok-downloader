@@ -2,229 +2,87 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Preparing Video Downloads</title>
+  <title>TikTok HD Downloader</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body {
-      font-family: system-ui, sans-serif;
-      background: #f4f4f4;
-      margin: 0;
-      padding: 12px;
-      text-align: center;
-    }
-
-    h3 {
-      margin-top: 20px;
-      color: #333;
-    }
-
-    .card {
-      background: #fff;
-      max-width: 420px;
-      margin: 20px auto;
-      padding: 15px;
-      border-radius: 14px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-      text-align: left;
-    }
-
-    .thumb-container {
-      width: 100%;
-      height: 240px; 
-      border-radius: 12px;
-      overflow: hidden;
-      background: #ddd;
-      position: relative;
-    }
-
-    .thumb-placeholder {
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, #eee 25%, #ddd 37%, #eee 63%);
-      background-size: 400% 100%;
-      animation: shimmer 1.4s infinite;
-    }
-
-    .video-thumb {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: none;
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
-
-    @keyframes shimmer {
-      0% { background-position: 100% 0 }
-      100% { background-position: -100% 0 }
-    }
-
-    .user {
-      display: flex;
-      align-items: center;
-      margin-top: 12px;
-    }
-
-    .avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      object-fit: cover;
-      margin-right: 10px;
-      background: #ddd;
-    }
-
-    .username {
-      font-weight: 600;
-      font-size: 15px;
-    }
-
-    .caption {
-      font-size: 13px;
-      color: #555;
-      margin-top: 6px;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    .status {
-      font-size: 12px;
-      font-weight: bold;
-      margin-top: 10px;
-      text-transform: uppercase;
-    }
-
-    button {
-      margin-top: 14px;
-      padding: 14px;
-      width: 100%;
-      border: none;
-      border-radius: 10px;
-      color: #fff;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: transform 0.1s, opacity 0.2s;
-    }
-
-    button:active {
-      transform: scale(0.98);
-      opacity: 0.9;
-    }
-
-    /* Style for HD Button */
-    .btn-hd { background: #27ae60; }
-    /* Style for SD Button */
-    .btn-sd { background: #333; }
+    body { font-family: system-ui, sans-serif; background: #f0f2f5; text-align: center; padding: 20px; }
+    .card { background: #fff; max-width: 400px; margin: 20px auto; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: left; }
+    .thumb-container { width: 100%; height: 220px; border-radius: 10px; background: #eee; overflow: hidden; position: relative; }
+    .video-thumb { width: 100%; height: 100%; object-fit: cover; }
+    .user { display: flex; align-items: center; margin: 15px 0; }
+    .avatar { width: 45px; height: 45px; border-radius: 50%; margin-right: 12px; }
+    .username { font-weight: bold; font-size: 16px; }
+    
+    /* Button Styles */
+    .btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+    button { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s; width: 100%; }
+    
+    .btn-normal { background: #000; color: #fff; }
+    .btn-hd { background: #27ae60; color: #fff; display: none; /* Hidden by default */ }
+    
+    button:hover { opacity: 0.85; transform: translateY(-1px); }
   </style>
 </head>
 <body>
 
-  <h3>Preparing Downloads…</h3>
+  <h2>Your Downloads</h2>
   <div id="list"></div>
 
   <script>
     const params = new URLSearchParams(location.search);
-    const rawLinks = params.get("links");
-
-    if (!rawLinks) {
-      document.body.innerHTML = "<h3>No links provided</h3>";
-      throw new Error("No links");
-    }
-
-    const links = rawLinks.split("\n").map(l => l.trim()).filter(Boolean);
+    const links = (params.get("links") || "").split("\n").filter(l => l.trim());
     const list = document.getElementById("list");
-
-    // Create placeholders
-    const cards = links.map((_, i) => {
-      const card = document.createElement("div");
-      card.className = "card";
-      card.innerHTML = `
-        <div class="thumb-container">
-          <div class="thumb-placeholder"></div>
-          <img class="video-thumb">
-        </div>
-        <div class="user">
-          <img class="avatar">
-          <div class="username">Loading...</div>
-        </div>
-        <div class="caption"></div>
-        <div class="status" style="color:#777">Waiting...</div>
-      `;
-      list.appendChild(card);
-      return card;
-    });
 
     async function loadVideo(index) {
       if (index >= links.length) return;
 
-      const card = cards[index];
-      const placeholder = card.querySelector(".thumb-placeholder");
-      const videoImg = card.querySelector(".video-thumb");
-      const avatar = card.querySelector(".avatar");
-      const usernameEl = card.querySelector(".username");
-      const captionEl = card.querySelector(".caption");
-      const status = card.querySelector(".status");
-
-      status.textContent = `Fetching High Quality...`;
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `<div class="status">Loading video ${index + 1}...</div>`;
+      list.appendChild(card);
 
       try {
         const res = await fetch(`/api?url=${encodeURIComponent(links[index])}`);
-        const json = await res.json();
-        const data = json.data;
+        const { data } = await res.json();
 
-        if (!data) throw new Error("No data");
+        if (!data) throw new Error("Video not found");
 
-        // PRIORITY LOGIC: Check for hdplay first
-        const isHD = !!data.hdplay;
-        const finalDownloadUrl = isHD ? data.hdplay : data.play;
+        card.innerHTML = `
+          <div class="thumb-container">
+            <img src="${data.cover}" class="video-thumb">
+          </div>
+          <div class="user">
+            <img src="${data.author.avatar}" class="avatar">
+            <span class="username">@${data.author.unique_id}</span>
+          </div>
+          <div class="btn-group">
+            <button class="btn-normal" onclick="download('${data.play}', 'sd_${data.id}')">
+               Download (Normal Quality)
+            </button>
+            <button id="hd-btn-${index}" class="btn-hd" onclick="download('${data.hdplay}', 'hd_${data.id}')">
+               Download HD (1080p)
+            </button>
+          </div>
+        `;
 
-        // Load Thumbnail
-        videoImg.src = data.origin_cover || data.cover;
-        videoImg.onload = () => {
-          placeholder.style.display = "none";
-          videoImg.style.display = "block";
-        };
-
-        // Info
-        avatar.src = data.author?.avatar || "";
-        usernameEl.textContent = "@" + (data.author?.unique_id || "user");
-        captionEl.textContent = data.title || "No caption";
-
-        // Create Button
-        const btn = document.createElement("button");
-        if (isHD) {
-          btn.textContent = "DOWNLOAD HD (1080p)";
-          btn.className = "btn-hd";
-          status.textContent = "HD Quality Found";
-          status.style.color = "#27ae60";
-        } else {
-          btn.textContent = "DOWNLOAD VIDEO (SD)";
-          btn.className = "btn-sd";
-          status.textContent = "Standard Quality Only";
-          status.style.color = "#555";
+        // SHOW HD BUTTON ONLY IF DATA EXISTS
+        if (data.hdplay) {
+          document.getElementById(`hd-btn-${index}`).style.display = "block";
         }
 
-        btn.onclick = () => {
-          window.location.href = `/download?url=${encodeURIComponent(finalDownloadUrl)}&name=tiktok_${data.id}`;
-        };
-
-        card.appendChild(btn);
-        
-        // Wait then load next
-        setTimeout(() => loadVideo(index + 1), 1000);
-
       } catch (err) {
-        status.textContent = "Failed to load video";
-        status.style.color = "red";
-        setTimeout(() => loadVideo(index + 1), 1000);
+        card.innerHTML = `<p style="color:red">Failed to load video.</p>`;
       }
+
+      setTimeout(() => loadVideo(index + 1), 800);
+    }
+
+    function download(url, name) {
+      window.location.href = `/download?url=${encodeURIComponent(url)}&name=${name}`;
     }
 
     loadVideo(0);
   </script>
+
 </body>
 </html>
