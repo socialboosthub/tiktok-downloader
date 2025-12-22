@@ -6,81 +6,57 @@ const app = express();
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "index.html"));
+  res.sendFile(path.join(__dirname, "index.html"));
 });
 
-// API PROXY
+// API
 app.get("/api", async (req, res) => {
-    try {
-        const url = req.query.url;
-        if (!url) return res.status(400).json({ error: "No URL provided" });
+  try {
+    const url = req.query.url;
+    if (!url) return res.status(400).json({ error: "No URL provided" });
 
-        const apiUrl = `https://tikwm.com/api/?url=${encodeURIComponent(url)}&hd=1`;
-        const response = await fetch(apiUrl, {
-            headers: {
-                "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X)"
-            }
-        });
+    const apiUrl = `https://tikwm.com/api/?url=${encodeURIComponent(url)}&hd=1`;
+    const response = await fetch(apiUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X)"
+      }
+    });
 
-        const json = await response.json();
-        res.json(json);
-    } catch {
-        res.status(500).json({ error: "API failed" });
-    }
+    const json = await response.json();
+    res.json(json);
+  } catch {
+    res.status(500).json({ error: "API failed" });
+  }
 });
 
-// VIDEO DOWNLOAD
-app.get("/download", async (req, res) => {
-    try {
-        const response = await fetch(req.query.url);
-        res.setHeader(
-            "Content-Disposition",
-            `attachment; filename="Tiksave_${Date.now()}.mp4"`
-        );
-        res.setHeader("Content-Type", "video/mp4");
-        response.body.pipe(res);
-    } catch {
-        res.status(500).send("Video download failed");
-    }
-});
-
-// MP3 DOWNLOAD
-app.get("/mp3", async (req, res) => {
-    try {
-        const response = await fetch(req.query.url);
-        res.setHeader(
-            "Content-Disposition",
-            `attachment; filename="Tiksave_${Date.now()}.mp3"`
-        );
-        res.setHeader("Content-Type", "audio/mpeg");
-        response.body.pipe(res);
-    } catch {
-        res.status(500).send("Audio download failed");
-    }
-});
-
-// IMAGE DOWNLOAD (Tiksave naming enforced)
+// IMAGE DOWNLOAD (FIXED NAME – NO RANDOM)
 app.get("/image", async (req, res) => {
-    try {
-        const imageUrl = req.query.url;
-        if (!imageUrl) return res.status(400).send("No image URL");
+  try {
+    const imageUrl = req.query.url;
+    const fileName = req.query.name;
 
-        const unique = Date.now() + Math.floor(Math.random() * 1000);
-        const fileName = `Tiksave_${unique}.jpg`;
-
-        const response = await fetch(imageUrl, {
-            headers: { "User-Agent": "Mozilla/5.0" }
-        });
-
-        res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
-        res.setHeader("Content-Type", "image/jpeg");
-        response.body.pipe(res);
-    } catch {
-        res.status(500).send("Image download failed");
+    if (!imageUrl || !fileName) {
+      return res.status(400).send("Missing image or filename");
     }
+
+    const response = await fetch(imageUrl, {
+      headers: { "User-Agent": "Mozilla/5.0" }
+    });
+
+    res.setHeader("Content-Type", "image/jpeg");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${fileName}"`
+    );
+    res.setHeader("Cache-Control", "no-store");
+
+    response.body.pipe(res);
+  } catch {
+    res.status(500).send("Image download failed");
+  }
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Running on http://localhost:${PORT}`);
+  console.log(`Running on http://localhost:${PORT}`);
 });
