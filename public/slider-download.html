@@ -8,35 +8,14 @@
   body { font-family: system-ui, sans-serif; background: #010101; color: #fff; padding: 15px; text-align: center; margin: 0; }
   .main-container { max-width: 480px; margin: 0 auto; }
   
-  /* Horizontal Slider Changes */
-  #gallery { 
-    display: none; 
-    flex-wrap: nowrap; 
-    overflow-x: auto; 
-    scroll-snap-type: x mandatory; 
-    gap: 15px; 
-    padding-bottom: 20px;
-    scrollbar-width: none; 
-  }
-  #gallery::-webkit-scrollbar { display: none; }
-
-  .photo-card { 
-    background: #121212; 
-    border: 1px solid #222; 
-    border-radius: 20px; 
-    padding: 12px; 
-    min-width: 90%; 
-    scroll-snap-align: center;
-    flex-shrink: 0;
-    box-sizing: border-box;
-  }
-  
+  .photo-card { background: #121212; border: 1px solid #222; border-radius: 20px; padding: 12px; margin-bottom: 20px; }
   .slider-img { width: 100%; border-radius: 14px; margin-bottom: 12px; }
   
   .download-btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; color: white; margin-top: 5px; }
   .individual-btn { background: linear-gradient(45deg, #EE1D52, #25F4EE); }
-  .all-btn { background: white; color: black; margin-bottom: 20px; font-size: 16px; width: 100%; }
+  .all-btn { background: white; color: black; margin-bottom: 20px; font-size: 16px; }
 
+  /* Reuse the loader from index for the initial load */
   #loader-box { margin-top: 100px; display: flex; flex-direction: column; align-items: center; }
   .tiktok-spinner { position: relative; width: 60px; height: 60px; margin-bottom: 20px; }
   .tiktok-spinner div { position: absolute; width: 100%; height: 100%; border-radius: 50%; opacity: 0.8; mix-blend-mode: screen; }
@@ -54,7 +33,7 @@
     <p>FETCHING SLIDESHOW...</p>
   </div>
 
-  <div id="gallery">
+  <div id="gallery" style="display:none">
     <button class="download-btn all-btn" id="dl-all-btn">DOWNLOAD ALL IMAGES</button>
   </div>
 </div>
@@ -73,7 +52,7 @@ async function load() {
 
     const gallery = document.getElementById("gallery");
     
-    // Set up Download All functionality (YOUR ORIGINAL LOGIC)
+    // Set up Download All functionality
     document.getElementById('dl-all-btn').onclick = async () => {
       for (let i = 0; i < data.images.length; i++) {
         const a = document.createElement('a');
@@ -81,14 +60,13 @@ async function load() {
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        await new Promise(r => setTimeout(r, 1000));
+        await new Promise(r => setTimeout(r, 1000)); // 1s delay to prevent browser block
       }
     };
 
     data.images.forEach((img, i) => {
       const card = document.createElement("div");
       card.className = "photo-card";
-      // YOUR ORIGINAL BUTTON LOGIC
       card.innerHTML = `
         <img class="slider-img" src="${img}">
         <button class="download-btn individual-btn" onclick="window.location.href='/image?url=${encodeURIComponent(img)}&name=tiktok_${data.id}_${i+1}'">
@@ -99,10 +77,12 @@ async function load() {
     });
 
     document.getElementById("loader-box").style.display = "none";
-    gallery.style.display = "flex"; // Changed to flex for horizontal layout
+    gallery.style.display = "block";
   } catch (err) { }
 }
 load();
 </script>
 </body>
 </html>
+
+This is for my slider i wanted it to be horizontally sliding one has to swipe to see the next slide rewrite full code without any other change other than that
