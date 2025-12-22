@@ -5,22 +5,35 @@
   <title>TikTok HD Downloader</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: system-ui, sans-serif; background: #f0f2f5; text-align: center; padding: 20px; }
+    body { font-family: system-ui, sans-serif; background: #f0f2f5; text-align: center; padding: 20px; margin: 0; }
     .card { background: #fff; max-width: 400px; margin: 20px auto; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: left; }
     .thumb-container { width: 100%; height: 220px; border-radius: 10px; background: #eee; overflow: hidden; position: relative; }
     .video-thumb { width: 100%; height: 100%; object-fit: cover; }
-    .user { display: flex; align-items: center; margin: 15px 0; }
-    .avatar { width: 45px; height: 45px; border-radius: 50%; margin-right: 12px; }
-    .username { font-weight: bold; font-size: 16px; }
     
-    /* Button Styles */
-    .btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
-    button { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s; width: 100%; }
+    .user { display: flex; align-items: center; margin: 15px 0 10px 0; }
+    .avatar { width: 40px; height: 40px; border-radius: 50%; margin-right: 12px; border: 1px solid #eee; }
+    .username { font-weight: bold; font-size: 15px; color: #1c1e21; }
+    
+    /* CAPTION STYLING */
+    .video-caption { 
+      font-size: 14px; 
+      color: #4b4f56; 
+      line-height: 1.4; 
+      margin-bottom: 15px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3; /* Show up to 3 lines then truncate */
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    
+    .btn-group { display: flex; flex-direction: column; gap: 10px; }
+    button { padding: 14px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s; width: 100%; }
     
     .btn-normal { background: #000; color: #fff; }
-    .btn-hd { background: #27ae60; color: #fff; display: none; /* Hidden by default */ }
+    .btn-hd { background: #27ae60; color: #fff; display: none; }
     
     button:hover { opacity: 0.85; transform: translateY(-1px); }
+    .loader-text { font-size: 13px; color: #888; text-align: center; margin-top: 10px; }
   </style>
 </head>
 <body>
@@ -38,7 +51,7 @@
 
       const card = document.createElement("div");
       card.className = "card";
-      card.innerHTML = `<div class="status">Loading video ${index + 1}...</div>`;
+      card.innerHTML = `<div class="loader-text">Loading video information...</div>`;
       list.appendChild(card);
 
       try {
@@ -46,6 +59,9 @@
         const { data } = await res.json();
 
         if (!data) throw new Error("Video not found");
+
+        // The 'title' field in TikWM API is the user's caption
+        const videoCaption = data.title || "No caption provided";
 
         card.innerHTML = `
           <div class="thumb-container">
@@ -55,9 +71,10 @@
             <img src="${data.author.avatar}" class="avatar">
             <span class="username">@${data.author.unique_id}</span>
           </div>
+          <div class="video-caption">${videoCaption}</div>
           <div class="btn-group">
             <button class="btn-normal" onclick="download('${data.play}', 'sd_${data.id}')">
-               Download (Normal Quality)
+               Download Normal Quality
             </button>
             <button id="hd-btn-${index}" class="btn-hd" onclick="download('${data.hdplay}', 'hd_${data.id}')">
                Download HD (1080p)
@@ -65,16 +82,16 @@
           </div>
         `;
 
-        // SHOW HD BUTTON ONLY IF DATA EXISTS
         if (data.hdplay) {
           document.getElementById(`hd-btn-${index}`).style.display = "block";
         }
 
       } catch (err) {
-        card.innerHTML = `<p style="color:red">Failed to load video.</p>`;
+        card.innerHTML = `<p style="color:red; text-align:center;">Failed to fetch this video.</p>`;
       }
 
-      setTimeout(() => loadVideo(index + 1), 800);
+      // Small delay between loading cards
+      setTimeout(() => loadVideo(index + 1), 600);
     }
 
     function download(url, name) {
