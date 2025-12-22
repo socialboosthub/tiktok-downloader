@@ -2,78 +2,268 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>TikTok MP3 Downloader</title>
+  <title>TikTok MP3 Downloader | TikSave</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: system-ui, sans-serif; background: #f9f9f9; text-align: center; padding: 20px; margin: 0; }
-    .card { background: #fff; max-width: 400px; margin: 20px auto; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; }
+    /* ================= CORE STYLES ================= */
+    :root {
+      --pink: #EE1D52;
+      --cyan: #25F4EE;
+    }
+    body { 
+        font-family: 'Segoe UI', system-ui, sans-serif; 
+        background: #000; 
+        text-align: center; 
+        padding: 0; 
+        margin: 0; 
+        color: white; 
+        transition: background 0.3s, color 0.3s;
+        overflow-x: hidden;
+    }
     
-    .music-thumb-container { width: 120px; height: 120px; margin: 0 auto 15px; border-radius: 50%; overflow: hidden; background: #eee; border: 4px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); animation: rotate 10s linear infinite; animation-play-state: paused; }
-    .music-thumb-container.playing { animation-play-state: running; }
+    .main-content {
+        padding: 20px;
+        min-height: 80vh;
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    #list { 
+        display: grid; 
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        justify-content: center;
+        opacity: 0; /* Hidden initially */
+        transition: opacity 0.5s ease;
+    }
+
+    /* ================= NEON LOADER ================= */
+    #loader-stage { display: flex; flex-direction: column; align-items: center; padding: 80px 20px; }
+    .neon-loader { position: relative; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; }
+    .neon-ring { position: absolute; border: 4px solid transparent; border-radius: 50%; animation: ring-pulse 2s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite; }
+    .ring-1 { width: 100%; height: 100%; border-top-color: var(--cyan); border-bottom-color: var(--cyan); animation-delay: 0s; }
+    .ring-2 { width: 70%; height: 70%; border-left-color: var(--pink); border-right-color: var(--pink); animation-delay: 0.5s; }
+    .ring-3 { width: 40%; height: 40%; border-top-color: #fff; border-bottom-color: #fff; animation-delay: 1s; }
+    @keyframes ring-pulse {
+        0% { transform: rotate(0deg) scale(1); opacity: 1; }
+        50% { transform: rotate(180deg) scale(1.2); opacity: 0.5; }
+        100% { transform: rotate(360deg) scale(1); opacity: 1; }
+    }
+    .loader-text-neon { margin-top: 25px; font-size: 11px; letter-spacing: 4px; color: #fff; font-weight: bold; text-transform: uppercase; animation: fade-blink 1s infinite; }
+    @keyframes fade-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    /* ================= MP3 CARD STYLES ================= */
+    .card, .skeleton-card { 
+        background: #111; 
+        padding: 25px; 
+        border-radius: 20px; 
+        border: 1px solid #333;
+        text-align: center; 
+        box-sizing: border-box;
+    }
+    
+    .music-thumb-container { 
+        width: 120px; height: 120px; margin: 0 auto 15px; 
+        border-radius: 50%; overflow: hidden; background: #222; 
+        border: 4px solid #333; box-shadow: 0 4px 10px rgba(0,0,0,0.3); 
+        animation: rotate 10s linear infinite; 
+    }
+    @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     .music-thumb { width: 100%; height: 100%; object-fit: cover; }
     
-    @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    
-    .song-title { font-weight: bold; font-size: 18px; color: #333; margin-bottom: 5px; }
+    .song-title { font-weight: bold; font-size: 18px; color: #fff; margin-bottom: 5px; }
     .song-author { font-size: 14px; color: #888; margin-bottom: 20px; }
     
-    .btn-mp3 { background: #ff2d55; color: #fff; padding: 16px; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.3s; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; }
-    .btn-mp3:hover { background: #e0244a; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255,45,85,0.3); }
-    
-    .loader-text { font-size: 14px; color: #bbb; }
+    .btn-mp3 { background: var(--pink); color: #fff; padding: 16px; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; font-size: 16px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.3s; }
+    .btn-mp3:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(238,29,82,0.3); }
+    .btn-home { background: transparent; color: #888; border: 1px solid #333; margin-top: 10px; padding: 10px; border-radius: 50px; cursor: pointer; width: 100%; font-size: 13px; }
+
+    /* SHIMMER EFFECT */
+    .shimmer {
+        background: #222;
+        background-image: linear-gradient(to right, #222 0%, #333 20%, #222 40%, #222 100%);
+        background-repeat: no-repeat;
+        background-size: 800px 100%; 
+        animation: shimmer 1.5s infinite linear forwards;
+    }
+    @keyframes shimmer { 0% { background-position: -450px 0; } 100% { background-position: 450px 0; } }
+    .sk-circle { width: 120px; height: 120px; border-radius: 50%; margin: 0 auto 15px; }
+    .sk-text { height: 15px; margin: 10px auto; border-radius: 4px; }
+
+    /* ================= NAVBAR ================= */
+    .fcc-nav { background: #0a0a23; height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; position: sticky; top: 0; z-index: 10000; }
+    .fcc-logo { background: linear-gradient(to bottom right, var(--pink), var(--cyan)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold; font-size: 18px; text-decoration: none; }
+    .nav-right { display: flex; align-items: center; gap: 15px; }
+    .theme-icon { cursor: pointer; font-size: 20px; color: #fff; }
+    .menu-toggle { background: #3b3b4f; border: 1px solid #fff; color: #fff; padding: 5px 10px; cursor: pointer; border-radius: 4px; }
+
+    /* ================= LIGHT MODE ================= */
+    body.light-mode { background: #f5f5f7; color: #000; }
+    body.light-mode .fcc-nav { background: #fff; border-bottom: 1px solid #ddd; }
+    body.light-mode .theme-icon, body.light-mode .menu-toggle { color: #000; border-color: #000; }
+    body.light-mode .card, body.light-mode .skeleton-card { background: #fff; border-color: #ddd; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+    body.light-mode .song-title { color: #000; }
+    body.light-mode .shimmer { background: #eee; background-image: linear-gradient(to right, #eee 0%, #f9f9f9 20%, #eee 40%, #eee 100%); }
+    body.light-mode .loader-text-neon { color: #000; }
+
+    /* ================= FOOTER ================= */
+    .footer { padding: 60px 6% 30px; background: var(--pink); border-radius: 12px; margin-top: 50px; text-align: left; color: #000; }
+    .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 30px; max-width: 1100px; margin: 0 auto; }
+    .footer h3, .footer h4 { margin-bottom: 12px; }
+    .footer a { color: #000; text-decoration: none; display: block; margin-bottom: 8px; font-size: 14px; }
+    .footer-bottom { margin-top: 40px; text-align: center; font-size: 13px; opacity: 0.7; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 20px; }
+
+    /* SIDE MENU */
+    .side-menu { position: fixed; top: 50px; right: -100%; width: 250px; height: 100vh; background: #0a0a23; transition: 0.4s; z-index: 9999; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+    .side-menu.open { right: 0; }
+    .side-menu a { color: #fff; text-decoration: none; border-bottom: 1px solid #333; padding-bottom: 10px; }
+    body.light-mode .side-menu { background: #fff; }
+    body.light-mode .side-menu a { color: #000; }
   </style>
 </head>
 <body>
 
-  <h2>Extract Audio</h2>
-  <div id="list"></div>
+  <nav class="fcc-nav">
+    <a href="index.html" class="fcc-logo">TikSave</a>
+    <div class="nav-right">
+      <span class="theme-icon" id="theme-icon" onclick="toggleTheme()">🌙</span>
+      <button class="menu-toggle" onclick="toggleMenu()">Menu ☰</button>
+    </div>
+  </nav>
+
+  <div class="side-menu" id="side-menu">
+    <a href="index.html">Home</a>
+    <a href="#">Tools</a>
+    <a href="#">MP3 Converter</a>
+  </div>
+
+  <div class="main-content">
+      <h2>Extract Audio</h2>
+      
+      <div id="loader-stage">
+          <div class="neon-loader">
+              <div class="neon-ring ring-1"></div>
+              <div class="neon-ring ring-2"></div>
+              <div class="neon-ring ring-3"></div>
+          </div>
+          <p class="loader-text-neon">Processing Audio</p>
+      </div>
+
+      <div id="list"></div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-grid">
+      <div>
+        <h3>TikSave MP3</h3>
+        <p>Convert your favorite TikToks to high-quality MP3 audio in seconds.</p>
+      </div>
+      <div>
+        <h4>Quick Links</h4>
+        <a href="index.html">Video Downloader</a>
+        <a href="#">Batch Downloader</a>
+        <a href="#">About Us</a>
+      </div>
+      <div>
+        <h4>Support</h4>
+        <a href="#">Help Center</a>
+        <a href="#">Contact</a>
+        <a href="#">Terms</a>
+      </div>
+    </div>
+    <div class="footer-bottom">© 2025 TikSave. All rights reserved.</div>
+  </footer>
 
   <script>
-    const params = new URLSearchParams(location.search);
-    const links = (params.get("links") || "").split("\n").filter(l => l.trim());
-    const list = document.getElementById("list");
-
-    async function loadAudio(index) {
-      if (index >= links.length) return;
-
-      const card = document.createElement("div");
-      card.className = "card";
-      card.innerHTML = `<div class="loader-text">Analyzing audio track...</div>`;
-      list.appendChild(card);
-
-      try {
-        const res = await fetch(`/api?url=${encodeURIComponent(links[index])}`);
-        const { data } = await res.json();
-
-        if (!data || !data.music) throw new Error("Audio not found");
-
-        const music = data.music_info || data.music; // TikWM usually uses data.music
-
-        card.innerHTML = `
-          <div class="music-thumb-container playing">
-            <img src="${data.music_info?.cover || data.cover}" class="music-thumb">
-          </div>
-          <div class="song-title">${data.music_info?.title || "Original Sound"}</div>
-          <div class="song-author">by @${data.author.unique_id}</div>
-          <button class="btn-mp3" onclick="downloadMp3('${data.music}', 'audio_${data.id}')">
-             <span>🎵</span> Download MP3
-          </button>
-        `;
-
-      } catch (err) {
-        card.innerHTML = `<p style="color:red;">Could not find audio for this link.</p>`;
+    function toggleMenu() { document.getElementById('side-menu').classList.toggle('open'); }
+    function toggleTheme() {
+      document.body.classList.toggle('light-mode');
+      const isLight = document.body.classList.contains('light-mode');
+      localStorage.setItem('theme', isLight ? 'light' : 'dark');
+      document.getElementById('theme-icon').textContent = isLight ? "☀️" : "🌙";
+    }
+    (function() {
+      if (localStorage.getItem('theme') === 'light') {
+        document.body.classList.add('light-mode');
+        document.getElementById('theme-icon').textContent = "☀️";
       }
+    })();
 
-      setTimeout(() => loadAudio(index + 1), 600);
+    /* --- BATCH MP3 LOGIC --- */
+    const params = new URLSearchParams(location.search);
+    const links = (params.get("links") || "").split("\n").filter(l => l.trim().length > 5);
+    const list = document.getElementById("list");
+    const loader = document.getElementById("loader-stage");
+
+    async function initMP3() {
+        if(links.length === 0) {
+            loader.innerHTML = "<p>Please provide valid TikTok links.</p>";
+            return;
+        }
+
+        // 3 second dramatic pause
+        await new Promise(r => setTimeout(r, 3000));
+
+        loader.style.display = "none";
+        list.style.opacity = "1";
+
+        // Create skeletons for all audio tracks
+        links.forEach((link, index) => {
+            list.innerHTML += `
+                <div id="card-${index}" class="skeleton-card">
+                    <div class="shimmer sk-circle"></div>
+                    <div class="shimmer sk-text" style="width:60%"></div>
+                    <div class="shimmer sk-text" style="width:40%"></div>
+                    <div class="shimmer sk-text" style="width:100%; height:50px; border-radius:50px; margin-top:15px"></div>
+                </div>
+            `;
+        });
+
+        fetchBatchMP3();
+    }
+
+    async function fetchBatchMP3() {
+        for (let i = 0; i < links.length; i++) {
+            fetchSingleMP3(links[i], i);
+        }
+    }
+
+    async function fetchSingleMP3(url, index) {
+        const el = document.getElementById(`card-${index}`);
+        try {
+            const res = await fetch(`/api?url=${encodeURIComponent(url)}`);
+            const json = await res.json();
+            const data = json.data;
+
+            if (data && (data.music || data.music_info)) {
+                el.className = "card";
+                const musicTitle = data.music_info?.title || "Original Sound";
+                const musicCover = data.music_info?.cover || data.cover;
+                
+                el.innerHTML = `
+                  <div class="music-thumb-container">
+                    <img src="${musicCover}" class="music-thumb">
+                  </div>
+                  <div class="song-title">${musicTitle}</div>
+                  <div class="song-author">by @${data.author.unique_id}</div>
+                  <button class="btn-mp3" onclick="downloadMp3('${data.music}', 'audio_${data.id}')">
+                     <span>🎵</span> Download MP3
+                  </button>
+                  <button class="btn-home" onclick="window.location.href='index.html'">Extract More</button>
+                `;
+            } else {
+                el.innerHTML = `<p style="color:red">Audio unavailable for this link.</p>`;
+            }
+        } catch (e) {
+            el.innerHTML = `<p style="color:red">Error fetching audio.</p>`;
+        }
     }
 
     function downloadMp3(url, name) {
-      // Points to our new /mp3 route in server.js
       window.location.href = `/mp3?url=${encodeURIComponent(url)}&name=${name}`;
     }
 
-    loadAudio(0);
+    initMP3();
   </script>
-
 </body>
 </html>
