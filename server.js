@@ -9,7 +9,7 @@ app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "index.html"));
 });
 
-// PROXY API
+// API PROXY
 app.get("/api", async (req, res) => {
     try {
         const url = req.query.url;
@@ -29,11 +29,29 @@ app.get("/api", async (req, res) => {
     }
 });
 
+// VIDEO DOWNLOAD
+app.get("/download", async (req, res) => {
+    try {
+        const response = await fetch(req.query.url);
+        res.setHeader(
+            "Content-Disposition",
+            `attachment; filename="Tiksave_${Date.now()}.mp4"`
+        );
+        res.setHeader("Content-Type", "video/mp4");
+        response.body.pipe(res);
+    } catch {
+        res.status(500).send("Video download failed");
+    }
+});
+
 // MP3 DOWNLOAD
 app.get("/mp3", async (req, res) => {
     try {
         const response = await fetch(req.query.url);
-        res.setHeader("Content-Disposition", `attachment; filename="${req.query.name || "audio"}.mp3"`);
+        res.setHeader(
+            "Content-Disposition",
+            `attachment; filename="Tiksave_${Date.now()}.mp3"`
+        );
         res.setHeader("Content-Type", "audio/mpeg");
         response.body.pipe(res);
     } catch {
@@ -41,48 +59,27 @@ app.get("/mp3", async (req, res) => {
     }
 });
 
-// VIDEO DOWNLOAD
-app.get("/download", async (req, res) => {
-    try {
-        const response = await fetch(req.query.url);
-        res.setHeader("Content-Disposition", `attachment; filename="${req.query.name || "video"}.mp4"`);
-        res.setHeader("Content-Type", "video/mp4");
-        response.body.pipe(res);
-    } catch {
-        res.status(500).send("Download failed");
-    }
-});
-
-// IMAGE DOWNLOAD PROXY
+// IMAGE DOWNLOAD (Tiksave naming enforced)
 app.get("/image", async (req, res) => {
     try {
         const imageUrl = req.query.url;
-        if (!imageUrl) {
-            return res.status(400).send("No image URL provided");
-        }
+        if (!imageUrl) return res.status(400).send("No image URL");
 
-        // ✅ Generate unique Tiksave filename
-        const uniqueNumber = Date.now() + Math.floor(Math.random() * 1000);
-        const fileName = `Tiksave_${uniqueNumber}.jpg`;
+        const unique = Date.now() + Math.floor(Math.random() * 1000);
+        const fileName = `Tiksave_${unique}.jpg`;
 
         const response = await fetch(imageUrl, {
-            headers: {
-                "User-Agent": "Mozilla/5.0"
-            }
+            headers: { "User-Agent": "Mozilla/5.0" }
         });
 
-        res.setHeader(
-            "Content-Disposition",
-            `attachment; filename="${fileName}"`
-        );
+        res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
         res.setHeader("Content-Type", "image/jpeg");
-
         response.body.pipe(res);
-    } catch (err) {
-        console.error(err);
+    } catch {
         res.status(500).send("Image download failed");
     }
 });
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Running on http://localhost:${PORT}`);
