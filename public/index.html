@@ -1,213 +1,1763 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <title>TikTok Downloader Pro</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #000; padding: 20px; margin: 0; color: white; overflow-x: hidden; }
+
+  <meta charset="UTF-8">
+
+  <title>TikSave Pro | Premium Downloader</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  
+
+  <style>
+
+    /* =========================================
+
+       YOUR ORIGINAL MOBILE STYLES (UNTOUCHED)
+
+       =========================================
+
+    */
+
+    :root {
+
+      --bg: #ffffff;
+
+      --card: #f4f4f4;
+
+      --text: #111111;
+
+      --muted: #666;
+
+      --border: rgba(255, 255, 255,0.08);
+
+    }
+
+    body {
+
+      --bg: #000000;
+
+      --card: #111111;
+
+      --text: #ffffff;
+
+      --muted: #aaaaaa;
+
+      --border: rgba(0,0,0,0.08);
+
+    }
+
+    * {
+
+      margin: 0;
+
+      padding: 0;
+
+      box-sizing: border-box;
+
+      font-family: Inter, sans-serif;
+
+    }
+
+    body {
+
+      background: var(--bg);
+
+      color: var(--text);
+
+      transition: background 0.3s, color 0.3s;
+
+    }
+
+    /* THEME TOGGLE */
+
+    .theme-toggle {
+
+      position: fixed;
+
+      top: 20px;
+
+      right: 20px;
+
+      background: var(--card);
+
+      border: 1px solid var(--border);
+
+      border-radius: 50%;
+
+      width: 42px;
+
+      height: 42px;
+
+      cursor: pointer;
+
+      font-size: 18px;
+
+    }
+
+    /* SECTIONS */
+
+    section {
+
+      padding: 80px 6%;
+
+    }
+
+    h2 {
+
+      font-size: 36px;
+
+      margin-bottom: 12px;
+
+    }
+
+    .section-desc {
+
+      color: var(--muted);
+
+      max-width: 600px;
+
+      margin-bottom: 40px;
+
+    }
+
+    /* SUPPORTED CONTENT */
+
+    .content-grid {
+
+      display: grid;
+
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+
+      gap: 20px;
+
+      text-align: center;
+
+    }
+
+    .content-card {
+
+      background: var(--card);
+
+      border: 1px solid var(--border);
+
+      border-radius: 16px;
+
+      padding: 28px;
+
+      transition: transform 0.3s, box-shadow 0.3s;
+
+    }
+
+    .content-card span {
+
+      font-size: 32px;
+
+    }
+
+    .content-card h3 {
+
+      margin-top: 14px;
+
+      margin-bottom: 8px;
+
+    }
+
+    .content-card p {
+
+      color: var(--muted);
+
+      font-size: 14px;
+
+    }
+
+    .content-card:hover {
+
+      transform: translateY(-6px);
+
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+
+    }
+
+    /* DISCLAIMER */
+
+    .disclaimer {
+
+      background: var(--card);
+
+      border-top: 1px solid var(--border);
+
+      border-bottom: 1px solid var(--border);
+
+      text-align: center;
+
+    }
+
+    .disclaimer p {
+
+      color: var(--muted);
+
+      max-width: 900px;
+
+      margin-bottom: 16px;
+
+      line-height: 1.6;
+
+    }
+
+    /* FOOTER */
+
+    .footer {
+
+      padding: 60px 6% 30px;
+
+      background: var(--pink);
+
+      border-radius: 12px;
+
+    }
+
+    .footer-grid {
+
+      display: grid;
+
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+
+    }
+
+    .footer h3,
+
+    .footer h4 {
+
+      margin-bottom: 12px;
+
+    }
+
+    .footer p,
+
+    .footer a {
+
+      color: black;
+
+      font-size: 14px;
+
+      text-decoration: none;
+
+      display: block;
+
+      margin-bottom: 8px;
+
+    }
+
+    .footer a:hover {
+
+      color: var(--text);
+
+    }
+
+    .footer-bottom {
+
+      margin-top: 40px;
+
+      text-align: center;
+
+      font-size: 13px;
+
+      color: var(--muted);
+
+    }
+
+    body.light-mode .content-card, body.light-mode .disclaimer { background: white; border: 2px solid var(--pink); border-radius: 12px;}
+
+    body.light-mode .footer { background: var(--pink);}
+
+    .step-card { background: blue; }
+
+    body.light-mode .disclaimer { border: none; text-align: center; }
+
+    
+
+    :root {
+
+      --bg: #000;
+
+      --box-bg: #111;
+
+      --text-main: #fff;
+
+      --text-dim: #b0b0b0;
+
+      --pink: #EE1D52;
+
+      --cyan: #25F4EE;
+
+      --nav-bg: #0a0a23;
+
+      --border-gradient: linear-gradient(to bottom right, #EE1D52, #25F4EE);
+
+    }
+
+    body.light-mode {
+
+      --bg: #f5f5f7;
+
+      --box-bg: linear-gradient(to bottom, #EE1D52, #25F4EE);
+
+      --text-main: #000;
+
+      --text-dim: #222;
+
+    }
+
+    body {
+
+      font-family: 'Segoe UI', Arial, sans-serif;
+
+      background: var(--bg);
+
+      color: var(--text-main);
+
+      margin: 0;
+
+      transition: 0.4s;
+
+      overflow-x: hidden;
+
+    }
+
+    /* --- NAV --- */
+
+    .fcc-nav {
+
+      background: var(--nav-bg);
+
+      height: 50px;
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: space-between;
+
+      padding: 0 20px;
+
+      position: sticky;
+
+      top: 0;
+
+      z-index: 10000;
+
+    }
+
+    .fcc-logo {
+
+      background: linear-gradient(to bottom right, var(--pink), var(--cyan));
+
+      -webkit-background-clip: text;
+
+      background-clip: text;
+
+      -webkit-text-fill-color: transparent;
+
+      font-weight: bold;
+
+      font-size: 18px;
+
+      text-decoration: none;
+
+    }
+
+    .nav-right {
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 15px;
+
+    }
+
+    .theme-icon {
+
+      cursor: pointer;
+
+      font-size: 20px;
+
+      transition: 0.3s;
+
+    }
+
+    .menu-toggle {
+
+      background: #3b3b4f;
+
+      border: 1px solid #fff;
+
+      color: #fff;
+
+      padding: 5px 10px;
+
+      cursor: pointer;
+
+    }
+
+    .side-menu {
+
+      position: fixed;
+
+      top: 50px;
+
+      right: -100%;
+
+      width: 250px;
+
+      height: calc(100vh - 50px);
+
+      background: var(--nav-bg);
+
+      transition: 0.4s;
+
+      z-index: 9999;
+
+      padding: 20px;
+
+      display: flex;
+
+      flex-direction: column;
+
+      gap: 20px;
+
+      border-left: 1px solid #3b3b4f;
+
+    }
+
+    .side-menu.open {
+
+      right: 0;
+
+    }
+
+    .side-menu a {
+
+      color: #fff;
+
+      text-decoration: none;
+
+      font-size: 18px;
+
+      border-bottom: 1px solid #3b3b4f;
+
+      padding-bottom: 10px;
+
+    }
+
+    /* --- TABS --- */
+
+    .tab-container {
+
+      display: flex;
+
+      max-width: 500px;
+
+      margin: 30px auto 10px;
+
+      gap: 8px;
+
+      padding: 0 10px;
+
+    }
+
+    .filter-button {
+
+      flex: 1;
+
+      padding: 12px 0;
+
+      border: none;
+
+      border-radius: 8px;
+
+      cursor: pointer;
+
+      color: white;
+
+      font-size: 11px;
+
+      font-weight: bold;
+
+      background: linear-gradient(to bottom, #EE1D52 50%, #25F4EE 50%);
+
+      background-size: 100% 200%;
+
+      background-position: top;
+
+      transition: 0.4s ease;
+
+      text-align: center;
+
+    }
+
+    .filter-button.selected {
+
+      background-position: bottom;
+
+      color: #000;
+
+    }
+
+    /* --- DOWNLOAD BOX --- */
+
+    .gradient-box {
+
+      background: linear-gradient(180deg, #EE1D52 0%, #25F4EE 100%);
+
+      padding: 35px 25px;
+
+      border-radius: 12px;
+
+      text-align: center;
+
+      border: 1px solid rgba(255, 255, 255, 0.2);
+
+      max-width: 500px;
+
+      margin: auto;
+
+      position: relative;
+
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+
+    }
+
+    .gradient-box h1,
+
+    .gradient-box p {
+
+      color: #fff;
+
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+    }
+
+    .input-box {
+
+      display: flex;
+
+      align-items: center;
+
+      background: rgba(255, 255, 255, 0.95);
+
+      border-radius: 10px;
+
+      padding: 8px 18px;
+
+      margin-bottom: 20px;
+
+      min-height: 55px;
+
+      border: 2px solid #fff;
+
+      transition: 0.3s;
+
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+
+      position: relative;
+
+    }
+
+    .input-box input,
+
+    .input-box textarea {
+
+      flex: 1;
+
+      border: none;
+
+      outline: none;
+
+      font-size: 15px;
+
+      color: #333;
+
+      background: transparent;
+
+      width: 100%;
+
+    }
+
+    .input-box textarea {
+
+      display: none;
+
+      height: 60px;
+
+      padding-top: 15px;
+
+      resize: none;
+
+      border-radius: 5px;
+
+    }
+
+    .action-btn {
+
+      background: var(--cyan);
+
+      color: #000;
+
+      border: none;
+
+      padding: 8px 16px;
+
+      border-radius: 10px;
+
+      font-weight: bold;
+
+      cursor: pointer;
+
+      height: 38px;
+
+      transition: 0.3s;
+
+      margin-left: 8px;
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 5px;
+
+      font-size: 13px;
+
+      white-space: nowrap;
+
+    }
+
+    .action-btn:hover {
+
+      transform: translateY(-2px);
+
+      filter: brightness(1.1);
+
+    }
+
+    #clear-btn {
+
+      background: var(--pink);
+
+      color: #fff;
+
+      display: none;
+
+    }
+
+    #error-toast {
+
+      position: absolute;
+
+      top: -50px;
+
+      left: 50%;
+
+      transform: translateX(-50%) scale(0.8);
+
+      background: #EE1D52;
+
+      color: white;
+
+      padding: 10px 25px;
+
+      border-radius: 30px;
+
+      font-size: 14px;
+
+      font-weight: 800;
+
+      pointer-events: none;
+
+      opacity: 0;
+
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+      box-shadow: 0 10px 20px rgba(238, 29, 82, 0.4);
+
+      z-index: 10;
+
+      white-space: nowrap;
+
+      border: 2px solid #fff;
+
+    }
+
+    #error-toast.show {
+
+      opacity: 1;
+
+      transform: translateX(-50%) scale(1);
+
+      top: -65px;
+
+    }
+
+    .glow-wrapper {
+
+      position: relative;
+
+      margin-top: 15px;
+
+      border-radius: 12px;
+
+      padding: 2px;
+
+      background: linear-gradient(45deg, #EE1D52, #25F4EE, #EE1D52, #25F4EE);
+
+      background-size: 400%;
+
+      animation: glowing 8s linear infinite;
+
+    }
+
+    @keyframes glowing {
+
+      0% { background-position: 0 0; }
+
+      50% { background-position: 400% 0; }
+
+      100% { background-position: 0 0; }
+
+    }
+
+    .process-btn {
+
+      height: 55px;
+
+      width: 100%;
+
+      background: #000;
+
+      color: white;
+
+      border-radius: 10px;
+
+      border: none;
+
+      cursor: pointer;
+
+      font-size: 16px;
+
+      font-weight: bold;
+
+      display: none;
+
+      text-transform: uppercase;
+
+      letter-spacing: 1px;
+
+    }
+
+    .process-btn.active {
+
+      display: block;
+
+    }
+
+    @keyframes shake {
+
+      0%, 100% { transform: translateX(0); }
+
+      20% { transform: translateX(-10px); }
+
+      40% { transform: translateX(10px); }
+
+      60% { transform: translateX(-10px); }
+
+      80% { transform: translateX(10px); }
+
+    }
+
+    .error-shake {
+
+      animation: shake 0.4s ease-in-out;
+
+      border: 2px solid #EE1D52 !important;
+
+    }
+
+    /* --- CLICKABLE PREMIUM FEATURES --- */
+
+    .feature-card {
+
+      background: var(--box-bg);
+
+      padding: 30px;
+
+      border-radius: 20px;
+
+      border: 1px solid #222;
+
+      text-align: center;
+
+      cursor: pointer;
+
+      transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+      position: relative;
+
+      overflow: hidden;
+
+    }
+
+    .feature-card:hover {
+
+      transform: translateY(-5px);
+
+      border-color: var(--cyan);
+
+    }
+
+    .feature-card:active {
+
+      transform: scale(0.92);
+
+    }
+
+    .feature-card.pop {
+
+      transform: scale(1.05);
+
+      border: 2px solid var(--cyan);
+
+      box-shadow: 0 0 20px rgba(37, 244, 238, 0.4);
+
+    }
+
+    .feature-card h3 {
+
+      margin-bottom: 10px;
+
+      transition: 0.3s;
+
+    }
+
+    .feature-card.pop h3 {
+
+      color: var(--cyan);
+
+      transform: scale(1.1);
+
+    }
+
+    /* --- SECTIONS --- */
+
+    .section-wrap {
+
+      max-width: 1100px;
+
+      margin: 60px auto;
+
+      padding: 0 20px;
+
+    }
+
+    .grid-3 {
+
+      display: grid;
+
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+
+      gap: 30px;
+
+    }
+
+    .step-card,
+
+    .guide-card {
+
+      background: var(--box-bg);
+
+      padding: 30px;
+
+      border-radius: 20px;
+
+      border: 1px solid #222;
+
+      text-align: center;
+
+    }
+
+    body.light-mode .feature-card,
+
+    body.light-mode .guide-card {
+
+      background: #fff;
+
+      border: 2px solid var(--cyan);
+
+    }
+
+    body.light-mode .step-card {
+
+      background: var(--pink);
+
+    }
+
+    .step-card {
+
+      background: var(--pink);
+
+    }
+
+    .step-img {
+
+      width: 80px;
+
+      height: 80px;
+
+      margin-bottom: 15px;
+
+    }
+
+    #scrollTop {
+
+      position: fixed;
+
+      bottom: 30px;
+
+      right: 30px;
+
+      width: 55px;
+
+      height: 55px;
+
+      background: var(--border-gradient);
+
+      border-radius: 50%;
+
+      display: none;
+
+      align-items: center;
+
+      justify-content: center;
+
+      font-size: 25px;
+
+      cursor: pointer;
+
+      z-index: 5000;
+
+    }
+
+    /* FAQ */
+
+    .faq-item {
+
+      background: var(--box-bg);
+
+      margin-bottom: 10px;
+
+      border-radius: 12px;
+
+      border: 1px solid #222;
+
+      overflow: hidden;
+
+    }
+
+    .faq-btn {
+
+      width: 100%;
+
+      padding: 20px;
+
+      background: none;
+
+      border: none;
+
+      color: var(--text-main);
+
+      text-align: left;
+
+      font-size: 17px;
+
+      font-weight: bold;
+
+      cursor: pointer;
+
+      display: flex;
+
+      justify-content: space-between;
+
+    }
+
+    .faq-content {
+
+      max-height: 0;
+
+      overflow: hidden;
+
+      transition: 0.3s ease;
+
+      font-size: 15px;
+
+      color: var(--text-dim);
+
+      padding: 0 20px;
+
+      line-height: 1.6;
+
+    }
+
+    .faq-item.active .faq-content {
+
+      max-height: 500px;
+
+      padding-bottom: 20px;
+
+    }
+
+    #loader-stage {
+
+      display: none;
+
+      flex-direction: column;
+
+      align-items: center;
+
+      padding: 20px;
+
+    }
+
+    .tiktok-spinner {
+
+      position: relative;
+
+      width: 50px;
+
+      height: 50px;
+
+      margin-bottom: 15px;
+
+    }
+
+    .tiktok-spinner div {
+
+      position: absolute;
+
+      width: 100%;
+
+      height: 100%;
+
+      border-radius: 50%;
+
+      opacity: 0.8;
+
+      mix-blend-mode: screen;
+
+    }
+
+    .cyan {
+
+      background-color: #25F4EE;
+
+      animation: move-cyan 1.5s infinite ease-in-out;
+
+    }
+
+    .pink {
+
+      background-color: #EE1D52;
+
+      animation: move-pink 1.5s infinite ease-in-out;
+
+      animation-delay: -0.75s;
+
+    }
+
+    @keyframes move-cyan {
+
+      0%, 100% { transform: translateX(-15px); }
+
+      50% { transform: translateX(15px); }
+
+    }
+
+    @keyframes move-pink {
+
+      0%, 100% { transform: translateX(15px); }
+
+      50% { transform: translateX(-15px); }
+
+    }
+
+    /* =========================================================
+
+       PC / DESKTOP ONLY FIXES
+
+       This block ONLY runs on screens larger than 1024px
+
+       It will NOT affect your phone.
+
+       =========================================================
+
+    */
+
+    @media screen and (min-width: 1024px) {
+
         
-        .tab-container { display: flex; width: 100%; gap: 8px; margin: 0 auto 15px auto; max-width: 500px; transition: opacity 0.3s; }
-        .filter-button {
-            flex: 1; padding: 12px 0; border: none; border-radius: 8px; cursor: pointer; color: white; font-size: 11px; font-weight: bold;
-            background: #1a1a1a; transition: 0.3s ease; text-align: center; border: 1px solid #333;
-        }
-        .filter-button.selected { background: #fff; color: #000; border-color: #fff; }
+
+        /* Center the input box and make it wider */
 
         .gradient-box {
-            background: #000; padding: 25px; border-radius: 24px; text-align: center;
-            border: 1px solid #222; max-width: 450px; margin: 0 auto; position: relative;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+
+            max-width: 800px;
+
+            margin: 40px 100px;
+
+             
+
         }
 
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
-        .error-shake { animation: shake 0.2s ease-in-out 0s 2; border: 2px solid #EE1D52 !important; }
+        /* Center the tabs */
 
-        .glow-wrapper {
-            position: relative; margin-top: 15px; border-radius: 12px; padding: 1px;
-            background: linear-gradient(45deg, #EE1D52, #25F4EE, #EE1D52, #25F4EE);
-            background-size: 400%; animation: glowing 8s linear infinite;
-        }
-        @keyframes glowing {
-            0% { background-position: 0 0; }
-            50% { background-position: 400% 0; }
-            100% { background-position: 0 0; }
-        }
-
-        .process-btn { 
-            height: 55px; width: 100%; background: #000; color: white; border-radius: 11px; 
-            border: none; cursor: pointer; font-size: 16px; font-weight: bold;
-            display: none; text-transform: uppercase; letter-spacing: 1px;
-        }
-        .process-btn.active { display: block; }
-
-        .input-box { display: flex; align-items: center; gap: 8px; border-radius: 12px; padding: 14px; background: #111; margin-bottom: 15px; border: 1px solid #333; transition: 0.3s; }
-        .input-box input, .input-box textarea { flex: 1; border: none; outline: none; font-size: 16px; color: #fff; background: transparent; width: 100%; }
-        .input-box textarea { height: 80px; resize: none; display: none; }
         
-        .action-btn { border: none; background: #fff; color: #000; padding: 8px 14px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; }
 
-        /* --- NEW COOL ANIMATION: NEON PULSE RINGS --- */
-        #loader-stage { display: none; flex-direction: column; align-items: center; padding: 40px 20px; }
+        .tab-container {
+
+    max-width: 800px;
+
+    margin: 30px 1000px;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+}
+
+        /* Force Grid Columns so they don't stretch */
+
+        .grid-3 {
+
+            grid-template-columns: repeat(3, 1fr);
+
+        }
+
+        .content-grid {
+
+             grid-template-columns: repeat(4, 1fr);
+
+        }
+
+        /* Center the rest of the content */
+
+        .section-wrap, 
+
+        .content-grid,
+
+        .faq-wrap {
+
+            max-width: 1100px;
+
+            margin-left: auto;
+
+            margin-right: auto;
+
+        }
+
+        /* Footer Alignment */
+
+        .footer-grid {
+
+            grid-template-columns: repeat(3, 1fr);
+
+            max-width: 1100px;
+
+            margin: 0 auto;
+
+        }
+
         
-        .neon-loader {
-            position: relative; width: 80px; height: 80px;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .neon-ring {
-            position: absolute; border: 4px solid transparent; border-radius: 50%;
-            animation: ring-pulse 2s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
-        }
-        .ring-1 { width: 100%; height: 100%; border-top-color: #25F4EE; border-bottom-color: #25F4EE; animation-delay: 0s; }
-        .ring-2 { width: 70%; height: 70%; border-left-color: #EE1D52; border-right-color: #EE1D52; animation-delay: 0.5s; }
-        .ring-3 { width: 40%; height: 40%; border-top-color: #fff; border-bottom-color: #fff; animation-delay: 1s; }
 
-        @keyframes ring-pulse {
-            0% { transform: rotate(0deg) scale(1); opacity: 1; }
-            50% { transform: rotate(180deg) scale(1.2); opacity: 0.5; }
-            100% { transform: rotate(360deg) scale(1); opacity: 1; }
+        /* Make the title slightly bigger on PC */
+
+        h2 {
+
+            font-size: 42px;
+
         }
 
-        .loader-text {
-            margin-top: 25px; font-size: 11px; letter-spacing: 4px; color: #fff;
-            font-weight: bold; text-transform: uppercase; animation: fade-blink 1s infinite;
-        }
-        @keyframes fade-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-    </style>
+    }
+
+  </style>
+
 </head>
+
 <body>
 
-    <div class="tab-container" id="tabs">
-        <button class="filter-button selected" onclick="switchTab(0)">Video</button>
-        <button class="filter-button" onclick="switchTab(1)">MP3</button>
-        <button class="filter-button" onclick="switchTab(2)">Story</button>
-        <button class="filter-button" onclick="switchTab(3)">Slider</button>
-        <button class="filter-button" onclick="switchTab(4)">Multi</button>
+  <nav class="fcc-nav">
+
+    <a href="#" class="fcc-logo">TikSave</a>
+
+    <div class="nav-right">
+
+      <span class="theme-icon" onclick="toggleTheme()" id="theme-icon">🌙</span>
+
+      <button class="menu-toggle" onclick="toggleMenu()">Menu ☰</button>
+
     </div>
 
-    <div class="gradient-box">
-        <div id="main-ui">
-            <h1 id="page-title" style="font-size: 20px; margin-bottom: 5px;">TikTok Video</h1>
-            <p id="page-desc" style="font-size: 13px; color: #666; margin-bottom: 20px;">Download watermark-free content</p>
+  </nav>
 
-            <div class="input-box" id="input-container">
-                <input type="text" id="main-input" placeholder="Paste link here..." oninput="validateInput()">
-                <textarea id="multi-input" placeholder="Paste multiple links (one per line)" oninput="validateInput()"></textarea>
-                <button class="action-btn" id="paste-btn" onclick="handlePaste()">Paste</button>
-                <button class="action-btn" id="clear-btn" style="display:none" onclick="handleClear()">Clear</button>
-            </div>
+  <div class="side-menu" id="side-menu">
 
-            <div class="glow-wrapper">
-                <button id="pbtn-0" class="process-btn active" onclick="go('video-download.html')">Process Video</button>
-                <button id="pbtn-1" class="process-btn" onclick="go('mp3-download.html')">Process MP3</button>
-                <button id="pbtn-2" class="process-btn" onclick="go('story-download.html')">Process Story</button>
-                <button id="pbtn-3" class="process-btn" onclick="go('slider-download.html')">Process Slider</button>
-                <button id="pbtn-4" class="process-btn" onclick="go('download.html')">Process Multi</button>
-            </div>
-        </div>
+    <a href="#">Curriculum</a><a href="#">Profile</a><a href="#">Settings</a><a href="#">Forum</a><a href="#">News</a>
 
-        <div id="loader-stage">
-            <div class="neon-loader">
-                <div class="neon-ring ring-1"></div>
-                <div class="neon-ring ring-2"></div>
-                <div class="neon-ring ring-3"></div>
-            </div>
-            <p class="loader-text">Analyzing</p>
-        </div>
+  </div>
+
+  <div class="tab-container" id="tabs">
+
+    <button class="filter-button selected" onclick="switchTab(0)">Video</button>
+
+    <button class="filter-button" onclick="switchTab(1)">Mp3</button>
+
+    <button class="filter-button" onclick="switchTab(2)">Story</button>
+
+    <button class="filter-button" onclick="switchTab(3)">Slider</button>
+
+    <button class="filter-button" onclick="switchTab(4)">Multi</button>
+
+  </div>
+
+  <div class="gradient-box">
+
+    <div id="main-ui">
+
+      <h1 id="page-title" style="font-size: 20px;">Download TikTok Videos</h1>
+
+      <br>
+
+      <p id="page-desc" style="font-size: 13px;">Paste a TikTok link to start downloading.</p>
+
+      <br>
+
+      <div class="input-box" id="input-container">
+
+        <div id="error-toast">⚠️ INVALID TIKTOK LINK!</div>
+
+        <input type="text" id="main-input" placeholder="🔗 Paste a tiktok link" oninput="validateInput()">
+
+        <textarea id="multi-input" placeholder="🔗  Paste multiple links (one per line)" oninput="validateInput()"></textarea>
+
+        <button class="action-btn" id="paste-btn" onclick="handlePaste()">Paste</button>
+
+        <button class="action-btn" id="clear-btn" onclick="handleClear()">Clear</button>
+
+      </div>
+
+      <div class="glow-wrapper">
+
+        <button id="pbtn-0" class="process-btn active" onclick="go('video-download.html')">Process Video Link</button>
+
+        <button id="pbtn-1" class="process-btn" onclick="go('mp3-download.html')">Process Link</button>
+
+        <button id="pbtn-2" class="process-btn" onclick="go('story-download.html')">Process Story Link</button>
+
+        <button id="pbtn-3" class="process-btn" onclick="go('slider-download.html')">Process Slider Link</button>
+
+        <button id="pbtn-4" class="process-btn" onclick="go('download.html')">Process Multi Links</button>
+
+      </div>
+
     </div>
+
+  </div>
+
+  <div class="section-wrap">
+
+    <h2 style="text-align:center; color:var(--pink);">Premium Features</h2>
+
+    <div class="grid-3">
+
+      <div class="feature-card" onclick="react(this)">
+
+        <h3>🚀 Multi-Download</h3>
+
+        <p>Process dozens of links simultaneously with our batch engine, perfect for large archival tasks.</p>
+
+      </div>
+
+      <div class="feature-card" onclick="react(this)">
+
+        <h3>💎 No Watermark</h3>
+
+        <p>Get original source files without any distracting TikTok logos or user IDs for a clean look.</p>
+
+      </div>
+
+      <div class="feature-card" onclick="react(this)">
+
+        <h3>⚡ Speed King</h3>
+
+        <p>Our servers provide direct links to the source, ensuring you get the highest download speed available.</p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <section class="supported">
+
+    <h2 style="text-align:center; color:var(--cyan">Supported Content</h2>
+
+    <p class="section-desc" style="text-align: center;">Download multiple types of TikTok content with high quality and no watermark.</p>
+
+    <div class="content-grid">
+
+      <div class="content-card">
+
+        <span>🎬</span>
+
+        <h3>Videos</h3>
+
+        <p>Download public TikTok videos in HD without watermark.</p>
+
+      </div>
+
+      <div class="content-card">
+
+        <span>🖼️</span>
+
+        <h3>Photo Sliders</h3>
+
+        <p>Save TikTok photo posts and albums in original quality.</p>
+
+      </div>
+
+      <div class="content-card">
+
+        <span>📖</span>
+
+        <h3>Stories</h3>
+
+        <p>Download TikTok stories from public accounts.</p>
+
+      </div>
+
+      <div class="content-card">
+
+        <span>🎵</span>
+
+        <h3>Audio</h3>
+
+        <p>Extract and download TikTok audio as MP3.</p>
+
+      </div>
+
+    </div>
+
+  </section>
+
+  <div class="section-wrap">
+
+    <h2 style="text-align:center; color:var(--pink);">How To Download</h2>
+
+    <div class="grid-3">
+
+      <div class="step-card"><img src="https://cdn-icons-png.flaticon.com/512/1621/1621635.png" class="step-img">
+
+        <h3>1. Copy URL</h3>
+
+        <p>Open TikTok and tap Share -> Copy Link to save the URL to your device clipboard.</p>
+
+      </div>
+
+      <div class="step-card"><img src="https://cdn-icons-png.flaticon.com/512/7066/7066014.png" class="step-img">
+
+        <h3>2. Paste Here</h3>
+
+        <p>Return here and click Paste. Our engine will find the highest resolution available instantly.</p>
+
+      </div>
+
+      <div class="step-card"><img src="https://cdn-icons-png.flaticon.com/512/2989/2989838.png" class="step-img">
+
+        <h3>3. Save File</h3>
+
+        <p>Click process and download the Ultra HD file directly to your device storage without logos.</p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="section-wrap">
+
+    <h2 style="text-align:center; color:var(--cyan);">Device Compatible</h2>
+
+    <div class="grid-3" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+
+      <div class="guide-card">
+
+        <h3>📱 Mobile Guide</h3>
+
+        <p>On Android, use Chrome for direct downloads. On iPhone, long-press the 'Download' button and choose 'Download Linked File'.</p>
+
+      </div>
+
+      <div class="guide-card">
+
+        <h3>💻 PC & Desktop</h3>
+
+        <p>Copy the link from the browser bar and paste here. Files save instantly to your default Downloads folder in original MP4 quality.</p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="section-wrap">
+
+    <h2 style="text-align:center; color:var(--pink);">Frequently Asked Questions</h2>
+
+    <div class="faq-wrap">
+
+      <div class="faq-item" onclick="this.classList.toggle('active')"><button class="faq-btn">1. Is this service free? <span>+</span></button>
+
+        <div class="faq-content">Yes, TikSave Pro is a 100% free web utility with no hidden costs.</div>
+
+      </div>
+
+      <div class="faq-item" onclick="this.classList.toggle('active')"><button class="faq-btn">2. Can I download 4K? <span>+</span></button>
+
+        <div class="faq-content">We always fetch the highest quality available, including 1080p and 4K source files.</div>
+
+      </div>
+
+      <div class="faq-item" onclick="this.classList.toggle('active')"><button class="faq-btn">3. Any download limits? <span>+</span></button>
+
+        <div class="faq-content">Zero limits. You can download unlimited content 24 hours a day, 365 days a year.</div>
+
+      </div>
+
+      <div class="faq-item" onclick="this.classList.toggle('active')"><button class="faq-btn">4. Phone issues? <span>+</span></button>
+
+        <div class="faq-content">Use the "Download Linked File" option on long-press to bypass Apple's download restrictions.</div>
+
+      </div>
+
+      <div class="faq-item" onclick="this.classList.toggle('active')"><button class="faq-btn">5. Works with private accounts? <span>+</span></button>
+
+        <div class="faq-content">No, we only access public profiles to respect user privacy and TikTok security.</div>
+
+      </div>
+
+      <div class="faq-item" onclick="this.classList.toggle('active')"><button class="faq-btn">6. Truly, no watermark? <span>+</span></button>
+
+        <div class="faq-content">Yes, we provide the raw MP4 file directly from the servers, meaning no logos or user IDs.</div>
+
+      </div>
+
+      <div class="faq-item" onclick="this.classList.toggle('active')"><button class="faq-btn">7. Is it safe to use? <span>+</span></button>
+
+        <div class="faq-content">Absolutely. We use SSL encryption and never store your data or the videos you process.</div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <section class="disclaimer">
+
+    <h2 style="text-align:center; color:var(--pink">Disclaimer</h2>
+
+    <p>
+
+      This website does not host any TikTok videos on its servers. All content is delivered directly from TikTok servers.
+
+      The ownership and copyright of the content belong to the original creators.
+
+    </p>
+
+    <p>
+
+      Users are responsible for how they use downloaded content. This service is intended for personal and educational use only.
+
+    </p>
+
+  </section>
+
+  <footer class="footer">
+
+    <div class="footer-grid">
+
+      <div>
+
+        <h3>TikSave</h3>
+
+        <p>Fast and simple TikTok downloader</p>
+
+        <p>with no watermark.</p>
+
+      </div>
+
+      <div>
+
+        <h4>Tools</h4>
+
+        <a href="./instagram.html">Instagram Downloader</a>
+
+        <a href="./youtube.html">Youtube Downloader</a>
+
+        
+
+        <a href="./facebook.html">Facebook Downloader</a>
+
+        <a href="./twitte.html">Twitter Downloader</a>
+
+      </div>
+
+      <div>
+
+        <h4>Legal</h4>
+
+        <a href="./privacy html">Privacy Policy</a>
+
+        <a href="./terms.html">Terms of Service</a>
+
+        <a href="./dmca.html">DMCA</a>
+
+      </div>
+
+    </div>
+
+    <div class="footer-bottom">
+
+      © 2025 TikSave. All rights reserved.
+
+    </div>
+
+  </footer>
+
+  <div>
+
+    <div id="scrollTop" onclick="scrollToTop()">🚀</div>
 
     <script>
-        // --- THE FIX FOR THE BACK BUTTON ---
-        window.onpageshow = function(event) {
-            // If the page is loaded from cache (back button pressed)
-            if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
-                resetUI();
-            }
-        };
 
-        function resetUI() {
-            document.getElementById('main-ui').style.display = 'block';
-            document.getElementById('loader-stage').style.display = 'none';
-            document.getElementById('tabs').style.opacity = '1';
-            handleClear(); // Optional: clears input on back
+      const tabConfigs = [{
+
+          title: "Download TikTok Videos",
+
+          desc: "Paste a TikTok link to start downloading."
+
+        },
+
+        {
+
+          title: "TikTok MP3 Downloader",
+
+          desc: "Download audio for your tiktok video."
+
+        },
+
+        {
+
+          title: "Free TikTok Story Saver",
+
+          desc: "Save TikTok stories before they disappear."
+
+        },
+
+        {
+
+          title: "TikTok Slider Downloader",
+
+          desc: "Convert photo sliders into video format."
+
+        },
+
+        {
+
+          title: "TikTok Multi Downloader",
+
+          desc: "Paste multiple links (one per line) to batch process."
+
         }
 
-        const tabConfigs = [
-            { title: "TikTok Video" },
-            { title: "TikTok MP3" },
-            { title: "TikTok Story" },
-            { title: "TikTok Slider" },
-            { title: "TikTok Multi" }
-        ];
+      ];
 
-        let activeTab = 0;
-        const isTikTokLink = (url) => /tiktok\.com/.test(url);
+      let activeTab = 0;
 
-        function switchTab(idx) {
-            activeTab = idx;
-            document.querySelectorAll('.filter-button').forEach((b, i) => b.classList.toggle('selected', i === idx));
-            document.querySelectorAll('.process-btn').forEach((p, i) => p.classList.toggle('active', i === idx));
-            document.getElementById('page-title').textContent = tabConfigs[idx].title;
-            
-            const isMulti = idx === 4;
-            document.getElementById('main-input').style.display = isMulti ? 'none' : 'block';
-            document.getElementById('multi-input').style.display = isMulti ? 'block' : 'none';
-            handleClear();
+      const isTikTokLink = (url) => /tiktok\.com/.test(url);
+
+      function react(el) {
+
+        document.querySelectorAll('.feature-card').forEach(card => {
+
+          card.classList.remove('pop');
+
+        });
+
+        el.classList.add('pop');
+
+      }
+
+      function toggleTheme() {
+
+        document.body.classList.toggle('light-mode');
+
+        document.getElementById('theme-icon').textContent = document.body.classList.contains('light-mode') ? "☀️" : "🌙";
+
+      }
+
+      function toggleMenu() {
+
+        document.getElementById('side-menu').classList.toggle('open');
+
+      }
+
+      function switchTab(idx) {
+
+        activeTab = idx;
+
+        document.querySelectorAll('.filter-button').forEach((b, i) => b.classList.toggle('selected', i === idx));
+
+        document.querySelectorAll('.process-btn').forEach((p, i) => p.classList.toggle('active', i === idx));
+
+        document.getElementById('page-title').textContent = tabConfigs[idx].title;
+
+        document.getElementById('page-desc').textContent = tabConfigs[idx].desc;
+
+        const isMulti = idx === 4;
+
+        document.getElementById('main-input').style.display = isMulti ? 'none' : 'block';
+
+        document.getElementById('multi-input').style.display = isMulti ? 'block' : 'none';
+
+        handleClear();
+
+      }
+
+      function triggerError() {
+
+        const container = document.getElementById('input-container');
+
+        const toast = document.getElementById('error-toast');
+
+        container.classList.add('error-shake');
+
+        toast.classList.add('show');
+
+        setTimeout(() => container.classList.remove('error-shake'), 500);
+
+        setTimeout(() => toast.classList.remove('show'), 3000);
+
+      }
+
+      async function handlePaste() {
+
+        try {
+
+          const text = await navigator.clipboard.readText();
+
+          if (!isTikTokLink(text)) {
+
+            triggerError();
+
+            return;
+
+          }
+
+          const input = activeTab === 4 ? document.getElementById('multi-input') : document.getElementById('main-input');
+
+          input.value = text;
+
+          validateInput();
+
+        } catch (err) {
+
+          console.log("Clipboard error");
+
         }
 
-        function validateInput() {
-            const input = activeTab === 4 ? document.getElementById('multi-input') : document.getElementById('main-input');
-            const val = input.value.trim();
-            document.getElementById('paste-btn').style.display = val ? 'none' : 'block';
-            document.getElementById('clear-btn').style.display = val ? 'block' : 'none';
+      }
+
+      function validateInput() {
+
+        const input = activeTab === 4 ? document.getElementById('multi-input') : document.getElementById('main-input');
+
+        const val = input.value.trim();
+
+        document.getElementById('paste-btn').style.display = val ? 'none' : 'block';
+
+        document.getElementById('clear-btn').style.display = val ? 'block' : 'none';
+
+      }
+
+      function handleClear() {
+
+        document.getElementById('main-input').value = "";
+
+        document.getElementById('multi-input').value = "";
+
+        validateInput();
+
+      }
+
+      function go(targetFile) {
+
+        const input = activeTab === 4 ? document.getElementById('multi-input') : document.getElementById('main-input');
+
+        const val = input.value.trim();
+
+        if (!val || !isTikTokLink(val)) {
+
+          triggerError();
+
+          return;
+
         }
 
-        async function handlePaste() {
-            try {
-                const text = await navigator.clipboard.readText();
-                if (activeTab !== 4 && !isTikTokLink(text)) {
-                    triggerError();
-                    return;
-                }
-                const input = activeTab === 4 ? document.getElementById('multi-input') : document.getElementById('main-input');
-                input.value = text;
-                validateInput();
-            } catch (err) {}
-        }
+        // REDIRECT IMMEDIATELY (NO LOADING ANIMATION)
 
-        function triggerError() {
-            const container = document.getElementById('input-container');
-            container.classList.add('error-shake');
-            setTimeout(() => container.classList.remove('error-shake'), 400);
-        }
+        window.location.href = targetFile + "?links=" + encodeURIComponent(val);
 
-        function handleClear() {
-            document.getElementById('main-input').value = "";
-            document.getElementById('multi-input').value = "";
-            validateInput();
-        }
+      }
 
-        function go(targetFile) {
-            const input = activeTab === 4 ? document.getElementById('multi-input') : document.getElementById('main-input');
-            const val = input.value.trim();
+      function scrollToTop() {
 
-            if (!val || (activeTab !== 4 && !isTikTokLink(val))) {
-                triggerError();
-                return;
-            }
+        window.scrollTo({
 
-            document.getElementById('main-ui').style.display = 'none';
-            document.getElementById('tabs').style.opacity = '0.1';
-            document.getElementById('loader-stage').style.display = 'flex';
+          top: 0,
 
-            setTimeout(() => {
-                window.location.href = targetFile + "?links=" + encodeURIComponent(val);
-            }, 1200);
-        }
+          behavior: 'smooth'
+
+        });
+
+      }
+
+      window.onscroll = () => {
+
+        document.getElementById('scrollTop').style.display = window.pageYOffset > 400 ? 'flex' : 'none';
+
+      }
+
     </script>
+
 </body>
+
 </html>
