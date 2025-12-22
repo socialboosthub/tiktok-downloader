@@ -6,17 +6,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body { font-family: system-ui, sans-serif; background: #f9f9f9; text-align: center; padding: 20px; margin: 0; }
-    #list { display: flex; flex-direction: column; align-items: center; }
-    .card { background: #fff; width: 100%; max-width: 400px; margin: 10px 0; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); display: none; }
-    .music-thumb-container { width: 100px; height: 100px; margin: 0 auto 15px; border-radius: 50%; overflow: hidden; border: 4px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    .card { background: #fff; max-width: 400px; margin: 20px auto; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; }
+    
+    .music-thumb-container { width: 120px; height: 120px; margin: 0 auto 15px; border-radius: 50%; overflow: hidden; background: #eee; border: 4px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); animation: rotate 10s linear infinite; animation-play-state: paused; }
+    .music-thumb-container.playing { animation-play-state: running; }
     .music-thumb { width: 100%; height: 100%; object-fit: cover; }
-    .song-title { font-weight: bold; font-size: 16px; color: #333; margin-bottom: 5px; }
-    .song-author { font-size: 13px; color: #888; margin-bottom: 20px; }
-    .btn-mp3 { background: #ff2d55; color: #fff; padding: 16px; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; width: 100%; }
+    
+    @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    
+    .song-title { font-weight: bold; font-size: 18px; color: #333; margin-bottom: 5px; }
+    .song-author { font-size: 14px; color: #888; margin-bottom: 20px; }
+    
+    .btn-mp3 { background: #ff2d55; color: #fff; padding: 16px; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.3s; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .btn-mp3:hover { background: #e0244a; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255,45,85,0.3); }
+    
+    .loader-text { font-size: 14px; color: #bbb; }
   </style>
 </head>
 <body>
 
+  <h2>Extract Audio</h2>
   <div id="list"></div>
 
   <script>
@@ -27,31 +36,44 @@
     async function loadAudio(index) {
       if (index >= links.length) return;
 
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `<div class="loader-text">Analyzing audio track...</div>`;
+      list.appendChild(card);
+
       try {
         const res = await fetch(`/api?url=${encodeURIComponent(links[index])}`);
         const { data } = await res.json();
 
-        if (data && data.music) {
-          const card = document.createElement("div");
-          card.className = "card";
-          card.style.display = "block";
-          
-          card.innerHTML = `
-            <div class="music-thumb-container"><img src="${data.music_info?.cover || data.cover}" class="music-thumb"></div>
-            <div class="song-title">${data.music_info?.title || "Original Sound"}</div>
-            <div class="song-author">@${data.author.unique_id}</div>
-            <button class="btn-mp3" onclick="downloadMp3('${data.music}', 'audio_${data.id}')">Download MP3</button>
-          `;
-          list.appendChild(card);
-        }
-      } catch (e) {}
-      loadAudio(index + 1);
+        if (!data || !data.music) throw new Error("Audio not found");
+
+        const music = data.music_info || data.music; // TikWM usually uses data.music
+
+        card.innerHTML = `
+          <div class="music-thumb-container playing">
+            <img src="${data.music_info?.cover || data.cover}" class="music-thumb">
+          </div>
+          <div class="song-title">${data.music_info?.title || "Original Sound"}</div>
+          <div class="song-author">by @${data.author.unique_id}</div>
+          <button class="btn-mp3" onclick="downloadMp3('${data.music}', 'audio_${data.id}')">
+             <span>🎵</span> Download MP3
+          </button>
+        `;
+
+      } catch (err) {
+        card.innerHTML = `<p style="color:red;">Could not find audio for this link.</p>`;
+      }
+
+      setTimeout(() => loadAudio(index + 1), 600);
     }
 
     function downloadMp3(url, name) {
+      // Points to our new /mp3 route in server.js
       window.location.href = `/mp3?url=${encodeURIComponent(url)}&name=${name}`;
     }
+
     loadAudio(0);
   </script>
+
 </body>
 </html>
