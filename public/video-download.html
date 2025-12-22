@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>Preparing Video Downloads</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
   <style>
     body {
       font-family: system-ui, sans-serif;
@@ -29,7 +28,6 @@
       text-align: left;
     }
 
-    /* MATCHING SLIDER SIZE: 240px */
     .thumb-container {
       width: 100%;
       height: 240px; 
@@ -39,7 +37,6 @@
       position: relative;
     }
 
-    /* Placeholder Shimmer Effect */
     .thumb-placeholder {
       width: 100%;
       height: 100%;
@@ -48,7 +45,6 @@
       animation: shimmer 1.4s infinite;
     }
 
-    /* Video Cover - Set to object-fit: cover for consistent sizing */
     .video-thumb {
       width: 100%;
       height: 100%;
@@ -95,9 +91,10 @@
     }
 
     .status {
-      font-size: 13px;
-      color: #777;
+      font-size: 12px;
+      font-weight: bold;
       margin-top: 10px;
+      text-transform: uppercase;
     }
 
     button {
@@ -106,133 +103,128 @@
       width: 100%;
       border: none;
       border-radius: 10px;
-      background: #000;
       color: #fff;
       font-size: 15px;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
-      transition: opacity 0.2s;
+      transition: transform 0.1s, opacity 0.2s;
     }
 
     button:active {
-      opacity: 0.8;
+      transform: scale(0.98);
+      opacity: 0.9;
     }
+
+    /* Style for HD Button */
+    .btn-hd { background: #27ae60; }
+    /* Style for SD Button */
+    .btn-sd { background: #333; }
   </style>
 </head>
-
 <body>
 
-<h3>Preparing Downloads…</h3>
-<div id="list"></div>
+  <h3>Preparing Downloads…</h3>
+  <div id="list"></div>
 
-<script>
-const params = new URLSearchParams(location.search);
-const rawLinks = params.get("links");
+  <script>
+    const params = new URLSearchParams(location.search);
+    const rawLinks = params.get("links");
 
-if (!rawLinks) {
-  document.body.innerHTML = "<h3>No links provided</h3>";
-  throw new Error("No links");
-}
+    if (!rawLinks) {
+      document.body.innerHTML = "<h3>No links provided</h3>";
+      throw new Error("No links");
+    }
 
-const links = rawLinks
-  .split("\n")
-  .map(l => l.trim())
-  .filter(Boolean);
+    const links = rawLinks.split("\n").map(l => l.trim()).filter(Boolean);
+    const list = document.getElementById("list");
 
-const list = document.getElementById("list");
+    // Create placeholders
+    const cards = links.map((_, i) => {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <div class="thumb-container">
+          <div class="thumb-placeholder"></div>
+          <img class="video-thumb">
+        </div>
+        <div class="user">
+          <img class="avatar">
+          <div class="username">Loading...</div>
+        </div>
+        <div class="caption"></div>
+        <div class="status" style="color:#777">Waiting...</div>
+      `;
+      list.appendChild(card);
+      return card;
+    });
 
-/* STEP 1: CREATE CARDS IMMEDIATELY */
-const cards = links.map((_, i) => {
-  const card = document.createElement("div");
-  card.className = "card";
+    async function loadVideo(index) {
+      if (index >= links.length) return;
 
-  card.innerHTML = `
-    <div class="thumb-container">
-      <div class="thumb-placeholder"></div>
-      <img class="video-thumb">
-    </div>
-    <div class="user">
-      <img class="avatar">
-      <div class="username">Loading...</div>
-    </div>
-    <div class="caption"></div>
-    <div class="status">Waiting to load video ${i + 1}...</div>
-  `;
+      const card = cards[index];
+      const placeholder = card.querySelector(".thumb-placeholder");
+      const videoImg = card.querySelector(".video-thumb");
+      const avatar = card.querySelector(".avatar");
+      const usernameEl = card.querySelector(".username");
+      const captionEl = card.querySelector(".caption");
+      const status = card.querySelector(".status");
 
-  list.appendChild(card);
-  return card;
-});
+      status.textContent = `Fetching High Quality...`;
 
-/* STEP 2: LOAD VIDEOS SEQUENTIALLY */
-async function loadVideo(index) {
-  if (index >= links.length) return;
+      try {
+        const res = await fetch(`/api?url=${encodeURIComponent(links[index])}`);
+        const json = await res.json();
+        const data = json.data;
 
-  const card = cards[index];
-  const placeholder = card.querySelector(".thumb-placeholder");
-  const videoImg = card.querySelector(".video-thumb");
-  const avatar = card.querySelector(".avatar");
-  const usernameEl = card.querySelector(".username");
-  const captionEl = card.querySelector(".caption");
-  const status = card.querySelector(".status");
+        if (!data) throw new Error("No data");
 
-  status.textContent = `Fetching video data...`;
+        // PRIORITY LOGIC: Check for hdplay first
+        const isHD = !!data.hdplay;
+        const finalDownloadUrl = isHD ? data.hdplay : data.play;
 
-  try {
-    const res = await fetch(`/api?url=${encodeURIComponent(links[index])}`);
-    if (!res.ok) throw new Error("API error");
+        // Load Thumbnail
+        videoImg.src = data.origin_cover || data.cover;
+        videoImg.onload = () => {
+          placeholder.style.display = "none";
+          videoImg.style.display = "block";
+        };
 
-    const json = await res.json();
-    const data = json.data;
+        // Info
+        avatar.src = data.author?.avatar || "";
+        usernameEl.textContent = "@" + (data.author?.unique_id || "user");
+        captionEl.textContent = data.title || "No caption";
 
-    // Load Thumbnail
-    videoImg.src = data.origin_cover || data.cover;
-    videoImg.onload = () => {
-      placeholder.style.display = "none";
-      videoImg.style.display = "block";
-    };
+        // Create Button
+        const btn = document.createElement("button");
+        if (isHD) {
+          btn.textContent = "DOWNLOAD HD (1080p)";
+          btn.className = "btn-hd";
+          status.textContent = "HD Quality Found";
+          status.style.color = "#27ae60";
+        } else {
+          btn.textContent = "DOWNLOAD VIDEO (SD)";
+          btn.className = "btn-sd";
+          status.textContent = "Standard Quality Only";
+          status.style.color = "#555";
+        }
 
-    // Profile Data
-    avatar.src = data.author?.avatar || data.author?.avatar_thumb || "";
-    usernameEl.textContent = "@" + (data.author?.unique_id || "tiktok_user");
-    captionEl.textContent = data.title || "No caption";
+        btn.onclick = () => {
+          window.location.href = `/download?url=${encodeURIComponent(finalDownloadUrl)}&name=tiktok_${data.id}`;
+        };
 
-    // UNIQUE FILENAME (Matches your slider logic)
-    const videoId = data.id || Date.now();
+        card.appendChild(btn);
+        
+        // Wait then load next
+        setTimeout(() => loadVideo(index + 1), 1000);
 
-// Normal quality button
-const btn = document.createElement("button");
-btn.textContent = "Download Video";
-btn.onclick = () => {
-  window.location.href = `/download?url=${encodeURIComponent(data.play)}&name=tiktok_${videoId}_normal`;
-};
-card.appendChild(btn);
+      } catch (err) {
+        status.textContent = "Failed to load video";
+        status.style.color = "red";
+        setTimeout(() => loadVideo(index + 1), 1000);
+      }
+    }
 
-// HD quality button (always below)
-const hdBtn = document.createElement("button");
-hdBtn.textContent = "Download HD";
-hdBtn.onclick = () => {
-  if (!data.hdplay) {
-    alert("HD quality not available for this video");
-    return;
-  }
-  window.location.href = `/download?url=${encodeURIComponent(data.hdplay)}&name=tiktok_${videoId}_hd`;
-};
-card.appendChild(hdBtn);
-
-status.textContent = "Ready";
-
-    // Wait 1.2 seconds before loading the next card to be safe
-    setTimeout(() => loadVideo(index + 1), 1200);
-
-  } catch (err) {
-    status.textContent = "Failed to load this video";
-    setTimeout(() => loadVideo(index + 1), 1000);
-  }
-}
-
-// Start loading the first video
-loadVideo(0);
-</script>
-
+    loadVideo(0);
+  </script>
 </body>
 </html>
