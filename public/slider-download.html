@@ -5,17 +5,37 @@
 <title>Slideshow Gallery</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-  body { font-family: system-ui, sans-serif; background: #010101; color: #fff; padding: 15px; text-align: center; margin: 0; }
+  body { font-family: system-ui, sans-serif; background: #010101; color: #fff; padding: 15px; text-align: center; margin: 0; overflow-x: hidden; }
   .main-container { max-width: 480px; margin: 0 auto; }
   
-  .photo-card { background: #121212; border: 1px solid #222; border-radius: 20px; padding: 12px; margin-bottom: 20px; }
-  .slider-img { width: 100%; border-radius: 14px; margin-bottom: 12px; }
+  /* Horizontal Slider Styles */
+  #gallery { 
+    display: flex; 
+    overflow-x: auto; 
+    scroll-snap-type: x mandatory; 
+    gap: 15px; 
+    padding-bottom: 20px;
+    scrollbar-width: none; /* Hide scrollbar for Firefox */
+  }
+  #gallery::-webkit-scrollbar { display: none; } /* Hide scrollbar for Chrome/Safari */
+
+  .photo-card { 
+    background: #121212; 
+    border: 1px solid #222; 
+    border-radius: 20px; 
+    padding: 12px; 
+    flex: 0 0 90%; /* Shows 90% of the card so the next one peaks out */
+    scroll-snap-align: center;
+    box-sizing: border-box;
+  }
+
+  .slider-img { width: 100%; border-radius: 14px; margin-bottom: 12px; height: auto; display: block; }
   
   .download-btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; color: white; margin-top: 5px; }
   .individual-btn { background: linear-gradient(45deg, #EE1D52, #25F4EE); }
-  .all-btn { background: white; color: black; margin-bottom: 20px; font-size: 16px; }
+  .all-btn { background: white; color: black; margin: 0 auto 20px auto; font-size: 16px; display: block; max-width: 480px; }
 
-  /* Reuse the loader from index for the initial load */
+  /* Loader Styles */
   #loader-box { margin-top: 100px; display: flex; flex-direction: column; align-items: center; }
   .tiktok-spinner { position: relative; width: 60px; height: 60px; margin-bottom: 20px; }
   .tiktok-spinner div { position: absolute; width: 100%; height: 100%; border-radius: 50%; opacity: 0.8; mix-blend-mode: screen; }
@@ -33,9 +53,10 @@
     <p>FETCHING SLIDESHOW...</p>
   </div>
 
+  <button class="download-btn all-btn" id="dl-all-btn" style="display:none">DOWNLOAD ALL IMAGES</button>
+  
   <div id="gallery" style="display:none">
-    <button class="download-btn all-btn" id="dl-all-btn">DOWNLOAD ALL IMAGES</button>
-  </div>
+    </div>
 </div>
 
 <script>
@@ -51,16 +72,16 @@ async function load() {
     if (!data?.images) return;
 
     const gallery = document.getElementById("gallery");
+    const dlAllBtn = document.getElementById('dl-all-btn');
     
-    // Set up Download All functionality
-    document.getElementById('dl-all-btn').onclick = async () => {
+    dlAllBtn.onclick = async () => {
       for (let i = 0; i < data.images.length; i++) {
         const a = document.createElement('a');
         a.href = `/image?url=${encodeURIComponent(data.images[i])}&name=tiktok_${data.id}_${i+1}`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        await new Promise(r => setTimeout(r, 1000)); // 1s delay to prevent browser block
+        await new Promise(r => setTimeout(r, 1000));
       }
     };
 
@@ -77,7 +98,8 @@ async function load() {
     });
 
     document.getElementById("loader-box").style.display = "none";
-    gallery.style.display = "block";
+    dlAllBtn.style.display = "block";
+    gallery.style.display = "flex";
   } catch (err) { }
 }
 load();
