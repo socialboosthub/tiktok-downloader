@@ -69,7 +69,7 @@ async function load() {
       card.className = "photo-card";
       card.innerHTML = `
         <img class="slider-img" src="${img}">
-        <button class="download-btn individual-btn" onclick="window.location.href='/image?url=${encodeURIComponent(img)}&name=tiktok_${data.id}_${i+1}'">
+        <button class="download-btn individual-btn" onclick="window.location.href='/image?url=${encodeURIComponent(img)}/image?url=${encodeURIComponent(img)}'">
           DOWNLOAD PHOTO ${i+1}
         </button>
       `;
