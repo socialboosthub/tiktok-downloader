@@ -4,42 +4,125 @@
 <meta charset="UTF-8">
 <title>Slideshow Gallery</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-  body { font-family: system-ui, sans-serif; background: #010101; color: #fff; padding: 15px; text-align: center; margin: 0; }
-  .main-container { max-width: 480px; margin: 0 auto; }
-  
-  .photo-card { background: #121212; border: 1px solid #222; border-radius: 20px; padding: 12px; margin-bottom: 20px; }
-  .slider-img { width: 100%; border-radius: 14px; margin-bottom: 12px; }
-  
-  .download-btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; color: white; margin-top: 5px; }
-  .individual-btn { background: linear-gradient(45deg, #EE1D52, #25F4EE); }
-  .all-btn { background: white; color: black; margin-bottom: 20px; font-size: 16px; }
 
-  /* Reuse the loader from index for the initial load */
-  #loader-box { margin-top: 100px; display: flex; flex-direction: column; align-items: center; }
-  .tiktok-spinner { position: relative; width: 60px; height: 60px; margin-bottom: 20px; }
-  .tiktok-spinner div { position: absolute; width: 100%; height: 100%; border-radius: 50%; opacity: 0.8; mix-blend-mode: screen; }
-  .cyan { background-color: #25F4EE; animation: move-cyan 1.5s infinite ease-in-out; }
-  .pink { background-color: #EE1D52; animation: move-pink 1.5s infinite ease-in-out; animation-delay: -0.75s; }
-  @keyframes move-cyan { 0%, 100% { transform: translateX(-20px); } 50% { transform: translateX(20px); } }
-  @keyframes move-pink { 0%, 100% { transform: translateX(20px); } 50% { transform: translateX(-20px); } }
+<style>
+  body {
+    font-family: system-ui, sans-serif;
+    background: #010101;
+    color: #fff;
+    padding: 15px;
+    margin: 0;
+    text-align: center;
+  }
+
+  .main-container {
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .photo-card {
+    background: #121212;
+    border: 1px solid #222;
+    border-radius: 20px;
+    padding: 12px;
+    margin-bottom: 20px;
+  }
+
+  .slider-img {
+    width: 100%;
+    border-radius: 14px;
+    margin-bottom: 12px;
+  }
+
+  .download-btn {
+    width: 100%;
+    padding: 16px;
+    border-radius: 12px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 5px;
+  }
+
+  .individual-btn {
+    background: linear-gradient(45deg, #EE1D52, #25F4EE);
+    color: #fff;
+  }
+
+  .all-btn {
+    background: #fff;
+    color: #000;
+    font-size: 16px;
+    margin-bottom: 20px;
+  }
+
+  #loader-box {
+    margin-top: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .tiktok-spinner {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    margin-bottom: 20px;
+  }
+
+  .tiktok-spinner div {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    opacity: 0.8;
+    mix-blend-mode: screen;
+  }
+
+  .cyan {
+    background: #25F4EE;
+    animation: move-cyan 1.5s infinite ease-in-out;
+  }
+
+  .pink {
+    background: #EE1D52;
+    animation: move-pink 1.5s infinite ease-in-out;
+    animation-delay: -0.75s;
+  }
+
+  @keyframes move-cyan {
+    0%, 100% { transform: translateX(-20px); }
+    50% { transform: translateX(20px); }
+  }
+
+  @keyframes move-pink {
+    0%, 100% { transform: translateX(20px); }
+    50% { transform: translateX(-20px); }
+  }
 </style>
 </head>
-<body>
 
+<body>
 <div class="main-container">
+
   <div id="loader-box">
-    <div class="tiktok-spinner"><div class="cyan"></div><div class="pink"></div></div>
+    <div class="tiktok-spinner">
+      <div class="cyan"></div>
+      <div class="pink"></div>
+    </div>
     <p>FETCHING SLIDESHOW...</p>
   </div>
 
-  <div id="gallery" style="display:none">
-    <button class="download-btn all-btn" id="dl-all-btn">DOWNLOAD ALL IMAGES</button>
+  <div id="gallery" style="display:none;">
+    <button class="download-btn all-btn" id="dl-all-btn">
+      DOWNLOAD ALL IMAGES
+    </button>
   </div>
+
 </div>
 
 <script>
-async function load() {
+async function loadSlideshow() {
   const links = new URLSearchParams(window.location.search).get("links");
   if (!links) return;
 
@@ -48,29 +131,31 @@ async function load() {
     const json = await res.json();
     const data = json.data;
 
-    if (!data?.images) return;
+    if (!data || !data.images) return;
 
     const gallery = document.getElementById("gallery");
-    
-    // Set up Download All functionality
-    document.getElementById('dl-all-btn').onclick = async () => {
-      for (let i = 0; i < data.images.length; i++) {
-        const a = document.createElement('a');
-        a.href = `/image?url=${encodeURIComponent(data.images[i])}&name=tiktok_${data.id}_${i+1}`;
+
+    // DOWNLOAD ALL
+    document.getElementById("dl-all-btn").onclick = async () => {
+      for (const img of data.images) {
+        const a = document.createElement("a");
+        a.href = `/image?url=${encodeURIComponent(img)}`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        await new Promise(r => setTimeout(r, 1000)); // 1s delay to prevent browser block
+        await new Promise(r => setTimeout(r, 1000));
       }
     };
 
+    // INDIVIDUAL IMAGES
     data.images.forEach((img, i) => {
       const card = document.createElement("div");
       card.className = "photo-card";
       card.innerHTML = `
-        <img class="slider-img" src="${img}">
-        <button class="download-btn individual-btn" onclick="window.location.href='/image?url=${encodeURIComponent(img)}/image?url=${encodeURIComponent(img)}'">
-          DOWNLOAD PHOTO ${i+1}
+        <img src="${img}" class="slider-img">
+        <button class="download-btn individual-btn"
+          onclick="window.location.href='/image?url=${encodeURIComponent(img)}'">
+          DOWNLOAD PHOTO ${i + 1}
         </button>
       `;
       gallery.appendChild(card);
@@ -78,9 +163,13 @@ async function load() {
 
     document.getElementById("loader-box").style.display = "none";
     gallery.style.display = "block";
-  } catch (err) { }
+
+  } catch (e) {
+    console.error(e);
+  }
 }
-load();
+
+loadSlideshow();
 </script>
 </body>
 </html>
