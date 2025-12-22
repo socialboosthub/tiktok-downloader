@@ -8,7 +8,7 @@
   body { font-family: system-ui, sans-serif; background: #010101; color: #fff; padding: 15px; text-align: center; margin: 0; }
   .main-container { max-width: 480px; margin: 0 auto; }
   
-  /* Horizontal Slider Container */
+  /* Horizontal Slider Changes */
   #gallery { 
     display: none; 
     flex-wrap: nowrap; 
@@ -16,16 +16,16 @@
     scroll-snap-type: x mandatory; 
     gap: 15px; 
     padding-bottom: 20px;
-    scrollbar-width: none; /* Firefox */
+    scrollbar-width: none; 
   }
-  #gallery::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+  #gallery::-webkit-scrollbar { display: none; }
 
   .photo-card { 
     background: #121212; 
     border: 1px solid #222; 
     border-radius: 20px; 
     padding: 12px; 
-    min-width: 85%; /* Ensures horizontal layout and hints at next slide */
+    min-width: 90%; 
     scroll-snap-align: center;
     flex-shrink: 0;
     box-sizing: border-box;
@@ -37,7 +37,6 @@
   .individual-btn { background: linear-gradient(45deg, #EE1D52, #25F4EE); }
   .all-btn { background: white; color: black; margin-bottom: 20px; font-size: 16px; width: 100%; }
 
-  /* Loader */
   #loader-box { margin-top: 100px; display: flex; flex-direction: column; align-items: center; }
   .tiktok-spinner { position: relative; width: 60px; height: 60px; margin-bottom: 20px; }
   .tiktok-spinner div { position: absolute; width: 100%; height: 100%; border-radius: 50%; opacity: 0.8; mix-blend-mode: screen; }
@@ -55,10 +54,9 @@
     <p>FETCHING SLIDESHOW...</p>
   </div>
 
-  <button class="download-btn all-btn" id="dl-all-btn" style="display:none">DOWNLOAD ALL IMAGES</button>
-  
   <div id="gallery">
-    </div>
+    <button class="download-btn all-btn" id="dl-all-btn">DOWNLOAD ALL IMAGES</button>
+  </div>
 </div>
 
 <script>
@@ -74,24 +72,23 @@ async function load() {
     if (!data?.images) return;
 
     const gallery = document.getElementById("gallery");
-    const dlAllBtn = document.getElementById('dl-all-btn');
     
-    // RESTORED: Your original Download All functionality
-    dlAllBtn.onclick = async () => {
+    // Set up Download All functionality (YOUR ORIGINAL LOGIC)
+    document.getElementById('dl-all-btn').onclick = async () => {
       for (let i = 0; i < data.images.length; i++) {
         const a = document.createElement('a');
         a.href = `/image?url=${encodeURIComponent(data.images[i])}&name=tiktok_${data.id}_${i+1}`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        await new Promise(r => setTimeout(r, 1000)); 
+        await new Promise(r => setTimeout(r, 1000));
       }
     };
 
     data.images.forEach((img, i) => {
       const card = document.createElement("div");
       card.className = "photo-card";
-      // RESTORED: Your original individual button onclick location.href
+      // YOUR ORIGINAL BUTTON LOGIC
       card.innerHTML = `
         <img class="slider-img" src="${img}">
         <button class="download-btn individual-btn" onclick="window.location.href='/image?url=${encodeURIComponent(img)}&name=tiktok_${data.id}_${i+1}'">
@@ -102,8 +99,7 @@ async function load() {
     });
 
     document.getElementById("loader-box").style.display = "none";
-    dlAllBtn.style.display = "block";
-    gallery.style.display = "flex"; // Show as flex for horizontal
+    gallery.style.display = "flex"; // Changed to flex for horizontal layout
   } catch (err) { }
 }
 load();
