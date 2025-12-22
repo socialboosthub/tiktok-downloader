@@ -18,6 +18,9 @@
     button { padding: 14px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 14px; width: 100%; }
     .btn-normal { background: #000; color: #fff; }
     .btn-hd { background: #27ae60; color: #fff; display: none; }
+    
+    /* Style for the new home button */
+    .btn-home { background: #eee; color: #000; }
 
     /* --- LOADING ANIMATION STYLES --- */
     #loader-stage { display: flex; flex-direction: column; align-items: center; padding: 80px 20px; }
@@ -80,6 +83,7 @@
             <div class="btn-group">
               <button class="btn-normal" onclick="downloadVideo('${data.play}', 'sd_${data.id}')">Download Normal</button>
               <button id="hd-${index}" class="btn-hd" onclick="downloadVideo('${data.hdplay}', 'hd_${data.id}')">Download HD</button>
+              <button class="btn-home" onclick="window.location.href='index.html'">Download Other Videos</button>
             </div>
           `;
           list.appendChild(card);
