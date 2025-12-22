@@ -6,20 +6,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   
   <style>
-    /* ================= CORE STYLES (Existing) ================= */
+    /* ================= CORE STYLES ================= */
     body { 
         font-family: system-ui, sans-serif; 
         background: #000; 
         text-align: center; 
-        padding: 0; /* Changed to 0 to fit Nav sticky positioning */
+        padding: 0; 
         margin: 0; 
         color: white; 
     }
     
-    /* Container for the downloader content to keep padding */
     .main-content {
         padding: 20px;
-        min-height: 60vh; /* Ensures footer stays down if content is short */
+        min-height: 60vh;
     }
 
     #list { display: flex; flex-direction: column; align-items: center; }
@@ -112,8 +111,8 @@
       flex-direction: column;
       gap: 20px;
       border-left: 1px solid #3b3b4f;
-      text-align: left; /* Ensure menu text aligns left */
-      box-sizing: border-box; /* Fix padding issues */
+      text-align: left;
+      box-sizing: border-box;
     }
 
     .side-menu.open {
@@ -154,7 +153,6 @@
         color: #000;
     }
     
-    /* Make loader text visible in light mode */
     body.light-mode .loader-text {
         color: #000;
     }
@@ -165,7 +163,7 @@
       background: #EE1D52;
       border-radius: 12px;
       margin-top: 80px;
-      text-align: left; /* Override body center alignment for footer content */
+      text-align: left;
     }
 
     .footer-grid {
@@ -279,16 +277,28 @@
   </footer>
 
   <script>
-    /* --- THEME & MENU LOGIC --- */
+    /* --- THEME & MENU LOGIC (UPDATED FOR PERSISTENCE) --- */
     function toggleMenu() {
       document.getElementById('side-menu').classList.toggle('open');
     }
 
     function toggleTheme() {
       document.body.classList.toggle('light-mode');
-      document.getElementById('theme-icon').textContent =
-        document.body.classList.contains('light-mode') ? "☀️" : "🌙";
+      const isLight = document.body.classList.contains('light-mode');
+      // Save State
+      localStorage.setItem('theme', isLight ? 'light' : 'dark');
+      document.getElementById('theme-icon').textContent = isLight ? "☀️" : "🌙";
     }
+
+    // INIT THEME
+    (function() {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'light') {
+        document.body.classList.add('light-mode');
+        const icon = document.getElementById('theme-icon');
+        if(icon) icon.textContent = "☀️";
+      }
+    })();
 
     /* --- DOWNLOADER LOGIC --- */
     const params = new URLSearchParams(location.search);
@@ -298,7 +308,6 @@
 
     async function loadVideo(index) {
       if (index >= links.length) {
-        // Hide loader when all links are processed
         loader.style.display = "none";
         return;
       }
@@ -345,4 +354,3 @@
   </script>
 </body>
 </html>
-
