@@ -2,166 +2,191 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Slideshow Gallery</title>
+<title>Image Slideshow | TikSave</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body {
-  font-family: system-ui, sans-serif;
-  background: #010101;
-  color: #fff;
-  margin: 0;
-  padding: 15px;
-  text-align: center;
-}
+/* ================= CORE ================= */
+:root { --pink: #EE1D52; --cyan: #25F4EE; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: #000; color: #fff; margin: 0; padding: 0; transition: background 0.3s, color 0.3s; text-align:center; }
+body.light-mode { background:#f5f5f7; color:#000; }
+a { text-decoration:none; color:inherit; }
 
-.main-container {
-  max-width: 480px;
-  margin: auto;
-}
+/* ================= NAVBAR ================= */
+.fcc-nav { background: #0a0a23; height: 50px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; position:sticky; top:0; z-index:1000; }
+.fcc-logo { background: linear-gradient(to bottom right, var(--pink), var(--cyan)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; font-weight:bold; font-size:18px; }
+.nav-right { display:flex; align-items:center; gap:15px; }
+.theme-icon { cursor:pointer; font-size:20px; color:#fff; }
+.menu-toggle { background:#3b3b4f; border:1px solid #fff; color:#fff; padding:5px 10px; cursor:pointer; border-radius:4px; }
 
-/* DOWNLOAD ALL BUTTON */
-.all-btn {
-  width: 100%;
-  padding: 16px;
-  border-radius: 12px;
-  border: none;
-  font-weight: bold;
-  cursor: pointer;
-  background: #fff;
-  color: #000;
-  margin-bottom: 16px;
-}
+/* SIDE MENU */
+.side-menu { position: fixed; top:50px; right:-100%; width:250px; height:100vh; background:#0a0a23; transition:0.4s; z-index:999; padding:20px; display:flex; flex-direction:column; gap:20px; }
+.side-menu.open { right:0; }
+.side-menu a { color:#fff; text-decoration:none; border-bottom:1px solid #333; padding-bottom:10px; }
+body.light-mode .side-menu { background:#fff; }
+body.light-mode .side-menu a { color:#000; }
 
-/* HORIZONTAL SLIDER */
-#gallery {
-  display: flex;
-  gap: 14px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-}
+/* ================= MAIN CONTENT ================= */
+.main-container { max-width:480px; margin:auto; padding:20px; min-height:80vh; }
 
-#gallery::-webkit-scrollbar {
-  display: none;
-}
+/* NEON LOADER */
+#loader-box { display:flex; flex-direction:column; align-items:center; padding:80px 20px; }
+.neon-loader { position:relative; width:80px; height:80px; display:flex; align-items:center; justify-content:center; }
+.neon-ring { position:absolute; border:4px solid transparent; border-radius:50%; animation:ring-pulse 2s cubic-bezier(0.455,0.03,0.515,0.955) infinite; }
+.ring-1 { width:100%; height:100%; border-top-color:var(--cyan); border-bottom-color:var(--cyan); animation-delay:0s; }
+.ring-2 { width:70%; height:70%; border-left-color:var(--pink); border-right-color:var(--pink); animation-delay:0.5s; }
+.ring-3 { width:40%; height:40%; border-top-color:#fff; border-bottom-color:#fff; animation-delay:1s; }
+@keyframes ring-pulse { 0%{transform:rotate(0deg) scale(1);opacity:1;}50%{transform:rotate(180deg) scale(1.2);opacity:0.5;}100%{transform:rotate(360deg) scale(1);opacity:1;} }
+.loader-text { margin-top:25px;font-size:11px;letter-spacing:4px;color:#fff;font-weight:bold;text-transform:uppercase;animation:fade-blink 1s infinite; }
+@keyframes fade-blink {0%,100%{opacity:1;}50%{opacity:0.3;}}
 
-/* SLIDE */
-.photo-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.slider-img {
-  width: 300px;
-  height: 300px;
-  object-fit: cover;
-  border-radius: 14px;
-  margin: 0 auto 12px;
-  display: block;
-}
+/* ================= CARDS ================= */
+.card { background:#111; padding:16px; border-radius:16px; border:1px solid #333; text-align:left; margin-bottom:20px; }
+.card img { width:100%; height:300px; object-fit:cover; border-radius:12px; margin-bottom:12px; }
+.user { display:flex; align-items:center; margin-bottom:10px; }
+.avatar { width:40px; height:40px; border-radius:50%; margin-right:12px; border:1px solid #333; }
+.username { font-weight:bold; color:#fff; }
+.caption { font-size:14px; color:#aaa; margin-bottom:12px; height:40px; overflow:hidden; }
+.download-btn { width:100%; padding:12px; border-radius:8px; border:none; font-weight:bold; cursor:pointer; margin-bottom:8px; }
+.individual-btn { background: linear-gradient(45deg, var(--pink), var(--cyan)); color:#fff; }
+.all-btn { width:100%; padding:16px; border-radius:12px; border:none; font-weight:bold; cursor:pointer; background:#fff; color:#000; }
 
-/* BUTTON */
-.download-btn {
-  width: 300px;
-  padding: 16px;
-  border-radius: 12px;
-  border: none;
-  font-weight: bold;
-  cursor: pointer;
-}
+/* LIGHT MODE */
+body.light-mode .card { background:#fff; border-color:#ddd; }
+body.light-mode .username { color:#000; }
+body.light-mode .caption { color:#444; }
+body.light-mode .download-btn.individual-btn { background: linear-gradient(45deg, var(--pink), var(--cyan)); color:#fff; }
+body.light-mode .all-btn { background:#000; color:#fff; }
 
-.individual-btn {
-  background: linear-gradient(45deg, #EE1D52, #25F4EE);
-  color: #fff;
-}
-
-/* LOADER */
-#loader-box {
-  margin-top: 100px;
-}
+/* ================= FOOTER ================= */
+.footer { padding:60px 6% 30px; background:var(--pink); border-radius:12px; margin-top:50px; text-align:left; color:#000; }
+.footer-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:30px; max-width:1100px; margin:0 auto; }
+.footer h3,h4 { margin-bottom:12px; }
+.footer a { color:#000; text-decoration:none; display:block; margin-bottom:8px; font-size:14px; }
+.footer-bottom { margin-top:40px; text-align:center; font-size:13px; opacity:0.7; border-top:1px solid rgba(0,0,0,0.1); padding-top:20px; }
 </style>
 </head>
 
 <body>
+
+<nav class="fcc-nav">
+  <a href="index.html" class="fcc-logo">TikSave</a>
+  <div class="nav-right">
+    <span class="theme-icon" id="theme-icon" onclick="toggleTheme()">🌙</span>
+    <button class="menu-toggle" onclick="toggleMenu()">Menu ☰</button>
+  </div>
+</nav>
+
+<div class="side-menu" id="side-menu">
+  <a href="index.html">Home</a>
+  <a href="#">Tools</a>
+  <a href="#">Privacy</a>
+</div>
+
 <div class="main-container">
 
   <div id="loader-box">
-    <p>FETCHING SLIDESHOW...</p>
+    <div class="neon-loader">
+      <div class="neon-ring ring-1"></div>
+      <div class="neon-ring ring-2"></div>
+      <div class="neon-ring ring-3"></div>
+    </div>
+    <p class="loader-text">Loading Slideshow</p>
   </div>
 
-  <!-- ✅ BUTTON MUST BE OUTSIDE SLIDER -->
-  <button class="all-btn" id="dl-all-btn" style="display:none;">
-    DOWNLOAD ALL IMAGES
-  </button>
-
-  <!-- ✅ SLIDER ONLY CONTAINS SLIDES -->
   <div id="gallery" style="display:none;"></div>
+  <button class="all-btn" id="dl-all-btn" style="display:none;">DOWNLOAD ALL IMAGES</button>
 
 </div>
 
-<script>
-const downloadedFiles = new Set();
+<footer class="footer">
+  <div class="footer-grid">
+    <div>
+      <h3>TikSave</h3>
+      <p>Fast and simple TikTok downloader with no watermark.</p>
+    </div>
+    <div>
+      <h4>Tools</h4>
+      <a href="#">Instagram Downloader</a>
+      <a href="#">YouTube Downloader</a>
+      <a href="#">Facebook Downloader</a>
+    </div>
+    <div>
+      <h4>Legal</h4>
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Service</a>
+    </div>
+  </div>
+  <div class="footer-bottom">© 2025 TikSave. All rights reserved.</div>
+</footer>
 
+<script>
+// THEME & MENU
+function toggleMenu() { document.getElementById('side-menu').classList.toggle('open'); }
+function toggleTheme() {
+  document.body.classList.toggle('light-mode');
+  const isLight = document.body.classList.contains('light-mode');
+  localStorage.setItem('theme', isLight?'light':'dark');
+  document.getElementById('theme-icon').textContent = isLight?'☀️':'🌙';
+}
+(function(){
+  if(localStorage.getItem('theme')==='light'){document.body.classList.add('light-mode');document.getElementById('theme-icon').textContent='☀️';}
+})();
+
+// SLIDESHOW LOGIC
+const downloadedFiles = new Set();
 async function loadSlideshow() {
   const links = new URLSearchParams(window.location.search).get("links");
-  if (!links) return;
+  if(!links) return;
 
   const res = await fetch(`/api?url=${encodeURIComponent(links)}`);
   const json = await res.json();
   const data = json.data;
-
-  if (!data || !data.images) return;
+  if(!data || !data.images) return;
 
   const gallery = document.getElementById("gallery");
   const allBtn = document.getElementById("dl-all-btn");
 
-  function downloadImage(imgUrl, fileName) {
-    if (downloadedFiles.has(fileName)) {
-      if (!confirm(`${fileName} already downloaded.\n\nDownload again?`)) return;
+  function downloadImage(imgUrl, fileName){
+    if(downloadedFiles.has(fileName)){
+      if(!confirm(`${fileName} already downloaded.\n\nDownload again?`)) return;
     }
-
     downloadedFiles.add(fileName);
-
-    const a = document.createElement("a");
-    a.href = `/image?url=${encodeURIComponent(imgUrl)}&name=${fileName.replace(".jpg","")}`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    const a=document.createElement("a");
+    a.href=`/image?url=${encodeURIComponent(imgUrl)}&name=${fileName.replace(".jpg","")}`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
   }
+
+  // INDIVIDUAL CARDS
+  for(let i=0;i<data.images.length;i++){
+    const fileName = `Tiksave_${data.id}_${i+1}.jpg`;
+    const card = document.createElement("div");
+    card.className="card";
+    card.innerHTML = `
+      <img src="${data.images[i]}">
+      <div class="user">
+        <img src="${data.author.avatar}" class="avatar">
+        <span class="username">@${data.author.unique_id}</span>
+      </div>
+      <div class="caption">${data.title || 'TikSave Image'}</div>
+      <button class="download-btn individual-btn">DOWNLOAD IMAGE ${i+1}</button>
+    `;
+    card.querySelector("button").onclick = () => downloadImage(data.images[i], fileName);
+    gallery.appendChild(card);
+  }
+
+  document.getElementById("loader-box").style.display="none";
+  gallery.style.display="block";
+  allBtn.style.display="block";
 
   // DOWNLOAD ALL
   allBtn.onclick = async () => {
-    for (let i = 0; i < data.images.length; i++) {
-      const fileName = `Tiksave_${data.id}_${i + 1}.jpg`;
+    for(let i=0;i<data.images.length;i++){
+      const fileName = `Tiksave_${data.id}_${i+1}.jpg`;
       downloadImage(data.images[i], fileName);
-      await new Promise(r => setTimeout(r, 1200));
+      await new Promise(r=>setTimeout(r,1200));
     }
   };
-
-  // INDIVIDUAL SLIDES
-  data.images.forEach((img, i) => {
-    const fileName = `Tiksave_${data.id}_${i + 1}.jpg`;
-
-    const card = document.createElement("div");
-    card.className = "photo-card";
-    card.innerHTML = `
-      <img src="${img}" class="slider-img">
-      <button class="download-btn individual-btn">
-        DOWNLOAD PHOTO ${i + 1}
-      </button>
-    `;
-
-    card.querySelector("button").onclick = () => {
-      downloadImage(img, fileName);
-    };
-
-    gallery.appendChild(card);
-  });
-
-  document.getElementById("loader-box").style.display = "none";
-  gallery.style.display = "flex";
-  allBtn.style.display = "block";
 }
 
 loadSlideshow();
