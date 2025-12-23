@@ -99,8 +99,8 @@
 
     /* ================= LIGHT MODE ================= */
     body.light-mode { background: #f5f5f7; color: #000; }
-    body.light-mode .fcc-nav { background: #fff; border-bottom: 1px solid #ddd; }
-    body.light-mode .theme-icon, body.light-mode .menu-toggle { color: #000; border-color: #000; }
+    body.light-mode .fcc-nav { background: #fff; border-bottom: 1px #ddd; }
+    body.light-mode .theme-icon, body.light-mode .menu-toggle { color: #0a0a23; border-color: #000; }
     body.light-mode .card, body.light-mode .skeleton-card { background: #fff; border-color: #ddd; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
     body.light-mode .song-title { color: #000; }
     body.light-mode .shimmer { background: #eee; background-image: linear-gradient(to right, #eee 0%, #f9f9f9 20%, #eee 40%, #eee 100%); }
@@ -117,7 +117,7 @@
     .side-menu { position: fixed; top: 50px; right: -100%; width: 250px; height: 100vh; background: #0a0a23; transition: 0.4s; z-index: 9999; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
     .side-menu.open { right: 0; }
     .side-menu a { color: #fff; text-decoration: none; border-bottom: 1px solid #333; padding-bottom: 10px; }
-    body.light-mode .side-menu { background: #fff; }
+    body.light-mode .side-menu { background: #0a0a23; }
     body.light-mode .side-menu a { color: #000; }
   </style>
 </head>
@@ -132,9 +132,11 @@
   </nav>
 
   <div class="side-menu" id="side-menu">
-    <a href="index.html">Home</a>
-    <a href="#">Tools</a>
-    <a href="#">MP3 Converter</a>
+    <a href="./index.html">Home</a>
+    <a href="./index.html #features">Premium Features</a>
+    <a href=". /index.html #download">How to download</a>
+    <a href=". /index.html #faq">FAQ</a>
+    <a href="./contact.html">Contact Us</a>
   </div>
 
   <div class="main-content">
@@ -155,20 +157,23 @@
   <footer class="footer">
     <div class="footer-grid">
       <div>
-        <h3>TikSave MP3</h3>
-        <p>Convert your favorite TikToks to high-quality MP3 audio in seconds.</p>
+        <h3>TikSave</h3>
+        <p>Fast and simple TikTok downloader.</p>
+        <p>with no watermark.</p>
       </div>
       <div>
-        <h4>Quick Links</h4>
-        <a href="index.html">Video Downloader</a>
-        <a href="#">Batch Downloader</a>
-        <a href="#">About Us</a>
+        <h4>Tools</h4>
+         <a href="./instagram">Instagram Downloader</a>
+         <a href="./youtube">Youtube Downloader</a>
+         <a href="./facebook ">Facebook Downloader</a>
+         <a href="./twitter">Twitter Downloader</a>
       </div>
       <div>
-        <h4>Support</h4>
-        <a href="#">Help Center</a>
-        <a href="#">Contact</a>
-        <a href="#">Terms</a>
+        <h4>Legal</h4>
+         <a href="./privacy">Privacy Policy</a>
+         <a href="./terms">Terms of Service</a>
+         <a href="./dmca">DMCA</a>
+
       </div>
     </div>
     <div class="footer-bottom">© 2025 TikSave. All rights reserved.</div>
@@ -198,8 +203,7 @@
     async function initMP3() {
         if(links.length === 0) {
             loader.innerHTML = "<p>Please provide valid TikTok links.</p>";
-            return;
-        }
+                 }
 
         // 3 second dramatic pause
         await new Promise(r => setTimeout(r, 3000));
