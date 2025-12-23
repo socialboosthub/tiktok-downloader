@@ -166,14 +166,14 @@ async function loadSlideshow() {
     const card = document.createElement("div");
     card.className="card";
     card.innerHTML = `
-      <img src="${data.images[i]}">
-      <div class="user">
-        <img src="${data.author.avatar}" class="avatar">
-        <span class="username">@${data.author.unique_id}</span>
-      </div>
-      <div class="caption">${data.title || 'TikSave Image'}</div>
-      <button class="download-btn individual-btn">DOWNLOAD IMAGE ${i+1}</button>
-    `;
+  <img src="${data.images[i]}">
+  <div class="user">
+    <img src="${data.author.avatar}" class="avatar">
+    <span class="username">@${data.author.unique_id}</span>
+  </div>
+  <div class="caption">${data.title || 'TikSave Image'}</div>
+  <button class="download-btn individual-btn">DOWNLOAD IMAGE ${i+1}</button>
+`;
     card.querySelector("button").onclick = () => downloadImage(data.images[i], fileName);
     gallery.appendChild(card);
   }
