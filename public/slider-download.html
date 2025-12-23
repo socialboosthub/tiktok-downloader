@@ -14,15 +14,56 @@ body {
   padding: 15px;
   text-align: center;
 }
-.main-container { max-width: 480px; margin: auto; }
+
+.main-container {
+  max-width: 480px;
+  margin: auto;
+}
+
+/* DOWNLOAD ALL BUTTON */
+.all-btn {
+  width: 100%;
+  padding: 16px;
+  border-radius: 12px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  background: #fff;
+  color: #000;
+  margin-bottom: 16px;
+}
+
+/* HORIZONTAL SLIDER */
+#gallery {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+#gallery::-webkit-scrollbar {
+  display: none;
+}
+
+/* SLIDE */
 .photo-card {
   background: #121212;
   border: 1px solid #222;
   border-radius: 20px;
   padding: 12px;
-  margin-bottom: 20px;
+  min-width: 100%;
+  flex-shrink: 0;
+  scroll-snap-align: center;
 }
-.slider-img { width: 100%; border-radius: 14px; margin-bottom: 12px; }
+
+.slider-img {
+  width: 100%;
+  border-radius: 14px;
+  margin-bottom: 12px;
+}
+
+/* BUTTON */
 .download-btn {
   width: 100%;
   padding: 16px;
@@ -31,42 +72,15 @@ body {
   font-weight: bold;
   cursor: pointer;
 }
+
 .individual-btn {
   background: linear-gradient(45deg, #EE1D52, #25F4EE);
   color: #fff;
 }
-  
 
-  /* HORIZONTAL SLIDES */
-#gallery {
-  display: flex;
-  gap: 14px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  padding-bottom: 10px;
-}
-
-/* hide scrollbar (optional) */
-#gallery::-webkit-scrollbar {
-  display: none;
-}
-
-.photo-card {
-  min-width: 100%;
-  scroll-snap-align: center;
-  flex-shrink: 0;
-}
-  
-.all-btn {
-  background: #fff;
-  color: #000;
-  margin-bottom: 20px;
-}
+/* LOADER */
 #loader-box {
   margin-top: 100px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 }
 </style>
 </head>
@@ -78,11 +92,13 @@ body {
     <p>FETCHING SLIDESHOW...</p>
   </div>
 
-  <div id="gallery" style="display:none;">
-    <button class="download-btn all-btn" id="dl-all-btn">
-      DOWNLOAD ALL IMAGES
-    </button>
-  </div>
+  <!-- ✅ BUTTON MUST BE OUTSIDE SLIDER -->
+  <button class="all-btn" id="dl-all-btn" style="display:none;">
+    DOWNLOAD ALL IMAGES
+  </button>
+
+  <!-- ✅ SLIDER ONLY CONTAINS SLIDES -->
+  <div id="gallery" style="display:none;"></div>
 
 </div>
 
@@ -96,29 +112,28 @@ async function loadSlideshow() {
   const res = await fetch(`/api?url=${encodeURIComponent(links)}`);
   const json = await res.json();
   const data = json.data;
+
   if (!data || !data.images) return;
 
   const gallery = document.getElementById("gallery");
+  const allBtn = document.getElementById("dl-all-btn");
 
   function downloadImage(imgUrl, fileName) {
     if (downloadedFiles.has(fileName)) {
-      const again = confirm(
-        `${fileName} already downloaded.\n\nDownload again?`
-      );
-      if (!again) return;
+      if (!confirm(`${fileName} already downloaded.\n\nDownload again?`)) return;
     }
 
     downloadedFiles.add(fileName);
 
     const a = document.createElement("a");
-    a.href = `/image?url=${encodeURIComponent(imgUrl)}&name=${fileName}`;
+    a.href = `/image?url=${encodeURIComponent(imgUrl)}&name=${fileName.replace(".jpg","")}`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
   }
 
   // DOWNLOAD ALL
-  document.getElementById("dl-all-btn").onclick = async () => {
+  allBtn.onclick = async () => {
     for (let i = 0; i < data.images.length; i++) {
       const fileName = `Tiksave_${data.id}_${i + 1}.jpg`;
       downloadImage(data.images[i], fileName);
@@ -126,7 +141,7 @@ async function loadSlideshow() {
     }
   };
 
-  // INDIVIDUAL
+  // INDIVIDUAL SLIDES
   data.images.forEach((img, i) => {
     const fileName = `Tiksave_${data.id}_${i + 1}.jpg`;
 
@@ -147,7 +162,8 @@ async function loadSlideshow() {
   });
 
   document.getElementById("loader-box").style.display = "none";
-  gallery.style.display = "block";
+  gallery.style.display = "flex";
+  allBtn.style.display = "block";
 }
 
 loadSlideshow();
