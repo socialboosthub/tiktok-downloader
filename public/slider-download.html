@@ -35,6 +35,28 @@ body {
   background: linear-gradient(45deg, #EE1D52, #25F4EE);
   color: #fff;
 }
+  
+
+  /* HORIZONTAL SLIDES */
+#gallery {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 10px;
+}
+
+/* hide scrollbar (optional) */
+#gallery::-webkit-scrollbar {
+  display: none;
+}
+
+.photo-card {
+  min-width: 100%;
+  scroll-snap-align: center;
+  flex-shrink: 0;
+}
+  
 .all-btn {
   background: #fff;
   color: #000;
