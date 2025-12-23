@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DMCA Policy | TikSave</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        /* Reuse the same styles as Terms of Service for consistency */
+        :root { --pink: #EE1D52; --cyan: #25F4EE; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #000; text-align: left; padding: 0; margin: 0; color: white; transition: background 0.3s, color 0.3s; line-height: 1.6; overflow-x: hidden; }
+        .main-content { padding: 60px 20px; max-width: 850px; margin: 0 auto; min-height: 70vh; }
+        h1 { font-size: 2.5rem; margin-bottom: 30px; background: linear-gradient(to right, var(--pink), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; }
+        h2 { color: var(--cyan); margin-top: 35px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        p, li { color: #ccc; margin-bottom: 15px; }
+        .fcc-nav { background: #0a0a23; height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; position: sticky; top: 0; z-index: 10000; }
+        .fcc-logo { background: linear-gradient(to bottom right, var(--pink), var(--cyan)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold; font-size: 18px; text-decoration: none; }
+        .nav-right { display: flex; align-items: center; gap: 15px; }
+        .theme-icon { cursor: pointer; font-size: 20px; color: #fff; }
+        .menu-toggle { background: #3b3b4f; border: 1px solid #fff; color: #fff; padding: 5px 10px; cursor: pointer; border-radius: 4px; }
+        body.light-mode { background: #f5f5f7; color: #000; }
+        body.light-mode p, body.light-mode li { color: #444; }
+        .side-menu { position: fixed; top: 50px; right: -100%; width: 250px; height: 100vh; background: #0a0a23; transition: 0.4s; z-index: 9999; padding: 20px; display: flex; flex-direction: column; gap: 20px; text-align: left;}
+        .side-menu.open { right: 0; }
+        .side-menu a { color: #fff; text-decoration: none; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        body.light-mode .side-menu { background: #0a0a23; }
+        body.light-mode .side-menu a { color: #fff; }
+        .footer { padding: 60px 6% 30px; background: var(--pink); border-radius: 12px; margin-top: 50px; color: #000; }
+        .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 30px; max-width: 1100px; margin: 0 auto; }
+        .footer a { color: #000; text-decoration: none; display: block; margin-bottom: 8px; font-size: 14px; }
+        .footer-bottom { margin-top: 40px; text-align: center; font-size: 13px; opacity: 0.7; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 20px; }
+    </style>
+</head>
+<body>
+    <nav class="fcc-nav">
+        <a href="index.html" class="fcc-logo">TikSave</a>
+        <div class="nav-right">
+            <span class="theme-icon" id="theme-icon" onclick="toggleTheme()">🌙</span>
+            <button class="menu-toggle" onclick="toggleMenu()">Menu ☰</button>
+        </div>
+    </nav>
+
+    <div class="side-menu" id="side-menu">
+      <a href="./index.html">Home</a>
+      <a href="./index.html#features">Features</a>
+<a href="./index.html#download">How to download</a>
+<a href="./index.html#faq">FAQ</a>
+<a href="./contact.html">Contact Us</a>
+
+    </div>
+
+    <div class="main-content">
+        <h1>DMCA Policy</h1>
+        <p>TikSave respects the intellectual property rights of others and expects users to do the same. We comply with the Digital Millennium Copyright Act (DMCA).</p>
+        
+        <h2>Ownership</h2>
+        <p>TikSave does not host, store, or upload any videos on its servers. Our tool simply acts as a bridge between the social media platform and the user's browser. Copyright remains with the original content creators.</p>
+        
+        <h2>Notice of Infringement</h2>
+        <p>If you are a copyright owner and believe that content accessed through TikSave infringes your rights, please provide a notice with the following:</p>
+        <ul>
+            <li>Identification of the copyrighted work.</li>
+            <li>Direct link to the content on the original social platform.</li>
+            <li>Your contact information (Email/Address).</li>
+            <li>A statement of good faith belief.</li>
+        </ul>
+        <p>Please send all DMCA inquiries through our <a href="contact.html" style="color:var(--cyan); font-weight:bold;">Contact Page</a>.</p>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-grid">
+            <div>
+                <h3>TikSave</h3>
+                <p>Fast and Simple tiktok downloader with no watermark.</p>
+            </div>
+            <div>
+              <h4>Tools</h4>
+              <a href="instagram.html">Instagram Downloader</a>
+<a href="youtube.html">Youtube Downloader</a>
+<a href="facebook.html">Facebook Downloader</a>
+              <a href="twitter.html">Twitter Downloader</a>
+          </div>
+            <div>
+                <h4>Legal</h4>
+                <a href="privacy.html">Privacy Policy</a>
+                <a href="terms.html">Terms of Service</a>
+                <a href="dmca.html">DMCA</a>
+            </div>
+        </div>
+        <div class="footer-bottom">© 2025 TikSave. All rights reserved.</div>
+    </footer>
+
+    <script>
+        function toggleMenu() { document.getElementById('side-menu').classList.toggle('open'); }
+        function toggleTheme() {
+            document.body.classList.toggle('light-mode');
+            const isLight = document.body.classList.contains('light-mode');
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+            document.getElementById('theme-icon').textContent = isLight ? "☀️" : "🌙";
+        }
+        (function() {
+            if (localStorage.getItem('theme') === 'light') {
+                document.body.classList.add('light-mode');
+                document.getElementById('theme-icon').textContent = "☀️";
+            }
+        })();
+    </script>
+</body>
+</html>
