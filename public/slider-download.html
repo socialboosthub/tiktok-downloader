@@ -6,27 +6,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-/* ================= CORE ================= */
 :root { --pink: #EE1D52; --cyan: #25F4EE; }
-body { font-family: 'Segoe UI', system-ui, sans-serif; background: #000; color: #fff; margin: 0; padding: 0; transition: background 0.3s, color 0.3s; text-align:center; }
+
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: #000; color: #fff; margin:0; padding:0; transition: background 0.3s, color 0.3s; text-align:center; }
 body.light-mode { background:#f5f5f7; color:#000; }
 a { text-decoration:none; color:inherit; }
 
-/* ================= NAVBAR ================= */
-.fcc-nav { background: #0a0a23; height: 50px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; position:sticky; top:0; z-index:1000; }
+/* NAVBAR */
+.fcc-nav { background:#0a0a23; height:50px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; position:sticky; top:0; z-index:1000; }
 .fcc-logo { background: linear-gradient(to bottom right, var(--pink), var(--cyan)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; font-weight:bold; font-size:18px; }
 .nav-right { display:flex; align-items:center; gap:15px; }
 .theme-icon { cursor:pointer; font-size:20px; color:#fff; }
 .menu-toggle { background:#3b3b4f; border:1px solid #fff; color:#fff; padding:5px 10px; cursor:pointer; border-radius:4px; }
 
 /* SIDE MENU */
-.side-menu { position: fixed; top:50px; right:-100%; width:250px; height:100vh; background:#0a0a23; transition:0.4s; z-index:999; padding:20px; display:flex; flex-direction:column; gap:20px; }
+.side-menu { position:fixed; top:50px; right:-100%; width:250px; height:100vh; background:#0a0a23; transition:0.4s; z-index:999; padding:20px; display:flex; flex-direction:column; gap:20px; }
 .side-menu.open { right:0; }
 .side-menu a { color:#fff; text-decoration:none; border-bottom:1px solid #333; padding-bottom:10px; }
 body.light-mode .side-menu { background:#fff; }
 body.light-mode .side-menu a { color:#000; }
 
-/* ================= MAIN CONTENT ================= */
+/* MAIN */
 .main-container { max-width:480px; margin:auto; padding:20px; min-height:80vh; }
 
 /* NEON LOADER */
@@ -36,16 +36,20 @@ body.light-mode .side-menu a { color:#000; }
 .ring-1 { width:100%; height:100%; border-top-color:var(--cyan); border-bottom-color:var(--cyan); animation-delay:0s; }
 .ring-2 { width:70%; height:70%; border-left-color:var(--pink); border-right-color:var(--pink); animation-delay:0.5s; }
 .ring-3 { width:40%; height:40%; border-top-color:#fff; border-bottom-color:#fff; animation-delay:1s; }
-@keyframes ring-pulse { 0%{transform:rotate(0deg) scale(1);opacity:1;}50%{transform:rotate(180deg) scale(1.2);opacity:0.5;}100%{transform:rotate(360deg) scale(1);opacity:1;} }
-.loader-text { margin-top:25px;font-size:11px;letter-spacing:4px;color:#fff;font-weight:bold;text-transform:uppercase;animation:fade-blink 1s infinite; }
+@keyframes ring-pulse {0%{transform:rotate(0deg) scale(1);opacity:1;}50%{transform:rotate(180deg) scale(1.2);opacity:0.5;}100%{transform:rotate(360deg) scale(1);opacity:1;}}
+.loader-text { margin-top:25px;font-size:11px;letter-spacing:4px;color:#fff;font-weight:bold;text-transform:uppercase;animation:fade-blink 1s infinite;}
 @keyframes fade-blink {0%,100%{opacity:1;}50%{opacity:0.3;}}
 
-/* ================= CARDS ================= */
-.card { background:#111; padding:16px; border-radius:16px; border:1px solid #333; text-align:left; margin-bottom:20px; }
+/* HORIZONTAL SLIDER */
+#gallery { display:flex; gap:14px; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; padding-bottom:10px; }
+#gallery::-webkit-scrollbar { display:none; }
+
+/* CARD */
+.card { min-width:300px; background:#111; padding:16px; border-radius:16px; border:1px solid #333; text-align:left; flex-shrink:0; scroll-snap-align:start; }
 .card img { width:100%; height:300px; object-fit:cover; border-radius:12px; margin-bottom:12px; }
 .user { display:flex; align-items:center; margin-bottom:10px; }
-.avatar { width:40px; height:40px; border-radius:50%; margin-right:12px; border:1px solid #333; }
-.username { font-weight:bold; color:#fff; }
+.avatar { width:36px; height:36px; border-radius:50%; margin-right:12px; border:1px solid #333; object-fit:cover; } /* same as video */
+.username { font-weight:bold; color:#fff; font-size:14px; }
 .caption { font-size:14px; color:#aaa; margin-bottom:12px; height:40px; overflow:hidden; }
 .download-btn { width:100%; padding:12px; border-radius:8px; border:none; font-weight:bold; cursor:pointer; margin-bottom:8px; }
 .individual-btn { background: linear-gradient(45deg, var(--pink), var(--cyan)); color:#fff; }
@@ -58,7 +62,7 @@ body.light-mode .caption { color:#444; }
 body.light-mode .download-btn.individual-btn { background: linear-gradient(45deg, var(--pink), var(--cyan)); color:#fff; }
 body.light-mode .all-btn { background:#000; color:#fff; }
 
-/* ================= FOOTER ================= */
+/* FOOTER */
 .footer { padding:60px 6% 30px; background:var(--pink); border-radius:12px; margin-top:50px; text-align:left; color:#000; }
 .footer-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:30px; max-width:1100px; margin:0 auto; }
 .footer h3,h4 { margin-bottom:12px; }
@@ -68,7 +72,6 @@ body.light-mode .all-btn { background:#000; color:#fff; }
 </head>
 
 <body>
-
 <nav class="fcc-nav">
   <a href="index.html" class="fcc-logo">TikSave</a>
   <div class="nav-right">
@@ -133,7 +136,7 @@ function toggleTheme() {
   if(localStorage.getItem('theme')==='light'){document.body.classList.add('light-mode');document.getElementById('theme-icon').textContent='☀️';}
 })();
 
-// SLIDESHOW LOGIC
+// SLIDESHOW
 const downloadedFiles = new Set();
 async function loadSlideshow() {
   const links = new URLSearchParams(window.location.search).get("links");
@@ -176,7 +179,7 @@ async function loadSlideshow() {
   }
 
   document.getElementById("loader-box").style.display="none";
-  gallery.style.display="block";
+  gallery.style.display="flex";
   allBtn.style.display="block";
 
   // DOWNLOAD ALL
