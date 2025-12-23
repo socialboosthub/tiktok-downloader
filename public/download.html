@@ -170,96 +170,102 @@
   </footer>
 
   <script>
-    /* --- THEME LOGIC --- */
-    function toggleMenu() { document.getElementById('side-menu').classList.toggle('open'); }
-    function toggleTheme() {
-      document.body.classList.toggle('light-mode');
-      const isLight = document.body.classList.contains('light-mode');
-      localStorage.setItem('theme', isLight ? 'light' : 'dark');
-      document.getElementById('theme-icon').textContent = isLight ? "☀️" : "🌙";
+/* --- THEME LOGIC --- */
+function toggleMenu() { document.getElementById('side-menu').classList.toggle('open'); }
+function toggleTheme() {
+  document.body.classList.toggle('light-mode');
+  const isLight = document.body.classList.contains('light-mode');
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+  document.getElementById('theme-icon').textContent = isLight ? "☀️" : "🌙";
+}
+(function() {
+  if (localStorage.getItem('theme') === 'light') {
+    document.body.classList.add('light-mode');
+    document.getElementById('theme-icon').textContent = "☀️";
+  }
+})();
+
+/* --- DOWNLOAD LOGIC --- */
+const params = new URLSearchParams(location.search);
+const links = (params.get("links") || "").split("\n").filter(l => l.trim().length > 5);
+const list = document.getElementById("list");
+const loader = document.getElementById("loader-stage");
+
+async function init() {
+    if(links.length === 0) {
+        loader.innerHTML = "<p>No valid links provided.</p>";
+        return;
     }
-    (function() {
-      if (localStorage.getItem('theme') === 'light') {
-        document.body.classList.add('light-mode');
-        document.getElementById('theme-icon').textContent = "☀️";
-      }
-    })();
 
-    /* --- DOWNLOAD LOGIC --- */
-    const params = new URLSearchParams(location.search);
-    const links = (params.get("links") || "").split("\n").filter(l => l.trim().length > 5);
-    const list = document.getElementById("list");
-    const loader = document.getElementById("loader-stage");
+    await new Promise(resolve => setTimeout(resolve, 3000));
 
-    async function init() {
-        if(links.length === 0) {
-            loader.innerHTML = "<p>No valid links provided.</p>";
-            return;
-        }
+    loader.style.display = "none";
+    list.style.opacity = "1";
 
-        // STEP 1: Wait for 3 seconds exactly
-        await new Promise(resolve => setTimeout(resolve, 3000));
+    links.forEach((link, index) => {
+        list.innerHTML += `
+            <div id="card-${index}" class="skeleton-card">
+                <div class="shimmer sk-thumb"></div>
+                <div class="shimmer sk-text" style="width:40%"></div>
+                <div class="shimmer sk-text" style="width:100%"></div>
+                <div class="shimmer sk-text" style="width:100%; height:40px; margin-top:20px"></div>
+            </div>
+        `;
+    });
 
-        // STEP 2: Hide Neon Loader, Show Grid with Skeletons
-        loader.style.display = "none";
-        list.style.opacity = "1";
+    processBatch();
+}
 
-        links.forEach((link, index) => {
-            list.innerHTML += `
-                <div id="card-${index}" class="skeleton-card">
-                    <div class="shimmer sk-thumb"></div>
-                    <div class="shimmer sk-text" style="width:40%"></div>
-                    <div class="shimmer sk-text" style="width:100%"></div>
-                    <div class="shimmer sk-text" style="width:100%; height:40px; margin-top:20px"></div>
+// --- PROCESS LINKS WITH DELAY ---
+async function processBatch() {
+    for (let i = 0; i < links.length; i++) {
+        await fetchOne(links[i], i, 0); // start with retry count = 0
+        await new Promise(r => setTimeout(r, 1200)); // 1.2s delay between requests
+    }
+}
+
+// --- FETCH WITH RETRY LOGIC ---
+async function fetchOne(url, index, retry) {
+    const el = document.getElementById(`card-${index}`);
+    try {
+        const res = await fetch(`/api?url=${encodeURIComponent(url)}`);
+        const json = await res.json();
+        const data = json.data;
+
+        if (data) {
+            el.className = "card";
+            el.innerHTML = `
+                <div class="thumb-container"><img src="${data.cover}" class="video-thumb"></div>
+                <div class="user">
+                    <img src="${data.author.avatar}" class="avatar">
+                    <span class="username">@${data.author.unique_id}</span>
+                </div>
+                <div class="video-caption">${data.title || "TikTok Video"}</div>
+                <div class="btn-group">
+                    <button class="btn-main" onclick="downloadVideo('${data.play}', 'video_${data.id}')">Download Video</button>
+                    ${data.hdplay ? `<button class="btn-hd" style="display:block" onclick="downloadVideo('${data.hdplay}', 'hd_${data.id}')">Download HD</button>` : ''}
+                    <button class="btn-home" onclick="window.location.href='index.html'">Download Other Videos</button>
                 </div>
             `;
-        });
-
-        // STEP 3: Fetch real data
-        processBatch();
-    }
-
-    async function processBatch() {
-        for (let i = 0; i < links.length; i++) {
-            fetchOne(links[i], i);
+        } else {
+            throw new Error("No data received");
+        }
+    } catch (e) {
+        if (retry < 2) {
+            // Retry after 1.5 seconds
+            await new Promise(r => setTimeout(r, 1500));
+            await fetchOne(url, index, retry + 1);
+        } else {
+            el.innerHTML = `<p style="color:red">Failed to load this video after 3 attempts.</p>`;
         }
     }
+}
 
-    async function fetchOne(url, index) {
-        const el = document.getElementById(`card-${index}`);
-        try {
-            const res = await fetch(`/api?url=${encodeURIComponent(url)}`);
-            const json = await res.json();
-            const data = json.data;
+function downloadVideo(url, name) {
+    window.location.href = `/download?url=${encodeURIComponent(url)}&name=${name}`;
+}
 
-            if (data) {
-                el.className = "card";
-                el.innerHTML = `
-                    <div class="thumb-container"><img src="${data.cover}" class="video-thumb"></div>
-                    <div class="user">
-                        <img src="${data.author.avatar}" class="avatar">
-                        <span class="username">@${data.author.unique_id}</span>
-                    </div>
-                    <div class="video-caption">${data.title || "TikTok Video"}</div>
-                    <div class="btn-group">
-                        <button class="btn-main" onclick="downloadVideo('${data.play}', 'video_${data.id}')">Download Video</button>
-                        ${data.hdplay ? `<button class="btn-hd" style="display:block" onclick="downloadVideo('${data.hdplay}', 'hd_${data.id}')">Download HD</button>` : ''}
-                        <button class="btn-home" onclick="window.location.href='index.html'">Download Other Videos</button>
-                    </div>
-                `;
-            } else {
-                el.innerHTML = `<p style="color:red">Failed to load this video.</p>`;
-            }
-        } catch (e) {
-            el.innerHTML = `<p style="color:red">Error connecting to server.</p>`;
-        }
-    }
-
-    function downloadVideo(url, name) {
-        window.location.href = `/download?url=${encodeURIComponent(url)}&name=${name}`;
-    }
-
-    init();
-  </script>
+init();
+      </script>
 </body>
 </html>
